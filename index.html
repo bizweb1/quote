@@ -6,6 +6,7 @@
 <title>True Square — Instant Renovation Estimate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --blueprint:#0E2F4D;
@@ -17,6 +18,7 @@
     --hivis:#E8622C;
     --hivis-dark:#C24A1D;
     --steel:#8FA6B8;
+    --good:#3F9E6D;
   }
   *{box-sizing:border-box;}
   html{ background-color:var(--blueprint-deep); }
@@ -79,6 +81,7 @@
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:28px;
+    align-items:start;
   }
   @media (max-width:860px){ main{grid-template-columns:1fr;} }
 
@@ -148,7 +151,15 @@
     font-weight:600;
   }
 
-  /* Ledger / paper panel */
+  .gauges{ margin-top:22px; padding-top:18px; border-top:1px dashed rgba(110,198,224,.4); }
+  .gauge-row{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .gauge-row:last-child{ margin-bottom:0; }
+  .gauge-label{ width:78px; flex-shrink:0; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--steel); }
+  .gauge-track{ flex:1; height:8px; background:rgba(244,241,232,.1); border-radius:4px; overflow:hidden; }
+  .gauge-fill{ height:100%; border-radius:4px; background:var(--hivis); width:0%; transition:width .5s ease; }
+  .gauge-fill.good{ background:var(--good); }
+  .gauge-tag{ width:64px; flex-shrink:0; text-align:right; font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--paper); }
+
   .ledger{
     background:var(--paper);
     color:var(--ink);
@@ -165,7 +176,7 @@
   .ledger-head{
     display:flex; justify-content:space-between; align-items:flex-start;
     border-bottom:2px solid var(--ink);
-    padding-bottom:12px; margin-bottom:16px;
+    padding-bottom:12px; margin-bottom:14px;
   }
   .ledger-head .tag{
     font-family:'IBM Plex Mono', monospace;
@@ -181,11 +192,42 @@
     font-size:12px; color:#6b5d3f; text-align:right;
   }
 
+  .confidence{
+    display:flex; align-items:center; gap:12px;
+    background:#EAE6D8; border:1px solid #C9C2A8; border-radius:4px;
+    padding:10px 12px; margin-bottom:16px;
+  }
+  .confidence .ring{
+    width:40px; height:40px; border-radius:50%; flex-shrink:0;
+    background:conic-gradient(var(--good) 0deg, var(--good) calc(var(--pct,0) * 3.6deg), #D9D2BC calc(var(--pct,0) * 3.6deg));
+    display:flex; align-items:center; justify-content:center;
+  }
+  .confidence .ring::after{
+    content:attr(data-pct)"%"; width:30px; height:30px; border-radius:50%; background:#EAE6D8;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:600; color:var(--ink);
+  }
+  .confidence .checks{ font-size:11px; color:#4a4331; line-height:1.6; }
+  .confidence .checks b{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6b5d3f; margin-bottom:2px; }
+  .confidence .checks span{ margin-right:10px; white-space:nowrap; }
+  .confidence .checks .off{ opacity:.4; text-decoration:line-through; }
+
+  .calc-status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    color:#8a7f66; margin-bottom:10px; min-height:16px;
+  }
+  .calc-status .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--hivis); margin-right:6px; animation:pulse 1s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.2;} }
+
   .line-item{
     display:flex; align-items:baseline; gap:8px;
-    padding:8px 0;
+    padding:7px 0;
     font-size:14px;
+    opacity:0; transform:translateY(4px);
+    transition:opacity .35s ease, transform .35s ease;
   }
+  .line-item.show{ opacity:1; transform:translateY(0); }
   .line-item .label{flex-shrink:0; color:#3a3227;}
   .line-item .fill{
     flex:1; border-bottom:1px dotted #8a7f66;
@@ -194,6 +236,12 @@
   .line-item .val{
     flex-shrink:0; font-family:'IBM Plex Mono', monospace;
     font-weight:500;
+  }
+
+  .section-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:.1em; color:#6b5d3f; margin:18px 0 4px;
+    border-bottom:1px dashed #c9c2a8; padding-bottom:4px;
   }
 
   .totals{
@@ -218,6 +266,12 @@
     font-size:22px; font-weight:600;
   }
 
+  .timeline{ display:flex; gap:8px; margin-top:4px; }
+  .tl-step{ flex:1; background:#EAE6D8; border:1px solid #C9C2A8; border-radius:4px; padding:10px 8px; text-align:center; }
+  .tl-step .tl-name{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#6b5d3f; margin-bottom:4px; }
+  .tl-step .tl-weeks{ font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:600; color:var(--ink); }
+  .tl-total{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:#6b5d3f; margin-top:8px; text-align:right; }
+
   .callout{
     margin-top:18px;
     font-size:12px;
@@ -238,6 +292,55 @@
     color:var(--line-cyan);
     text-transform:uppercase;
   }
+
+  /* Scope of work */
+  .scope-head{ display:flex; align-items:center; gap:8px; margin:18px 0 4px; }
+  .pro-badge{
+    font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:.08em;
+    background:var(--ink); color:#EAE6D8; padding:2px 6px; border-radius:2px; font-weight:600;
+  }
+  .scope-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--ink); color:var(--paper); border:none; border-radius:3px;
+    padding:9px 14px; font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:600;
+    cursor:pointer; margin-top:6px;
+  }
+  .scope-btn:hover{ background:#2a3844; }
+  .scope-btn:disabled{ opacity:.5; cursor:default; }
+  .scope-status{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#8a7f66; margin-top:6px; min-height:14px; }
+  .scope-list{ list-style:none; margin:10px 0 0; padding:0; }
+  .scope-list li{
+    display:flex; gap:8px; align-items:flex-start; font-size:13px; color:#3a3227;
+    padding:5px 0; border-bottom:1px dotted #d9d2bc;
+  }
+  .scope-list li::before{ content:"□"; color:var(--hivis); flex-shrink:0; font-size:13px; }
+
+  /* Save job */
+  .save-row{ display:flex; gap:8px; margin-top:16px; align-items:center; }
+  .save-btn{
+    background:var(--good); color:#fff; border:none; border-radius:3px;
+    padding:10px 16px; font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:600;
+    cursor:pointer; flex-shrink:0;
+  }
+  .save-btn:hover{ background:#358a5e; }
+  .save-status{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b5d3f; }
+
+  /* Saved jobs panel */
+  .jobs-panel{ max-width:1100px; margin:0 auto 60px; padding:0 20px; }
+  .jobs-list{ display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+  .job-chip{
+    background:var(--blueprint-deep); border:1px solid rgba(110,198,224,.4); border-radius:3px;
+    padding:10px 14px; cursor:pointer; font-size:13px; color:var(--paper);
+    display:flex; flex-direction:column; gap:2px; min-width:140px;
+  }
+  .job-chip:hover{ border-color:var(--hivis); }
+  .job-chip .jc-name{ font-weight:600; }
+  .job-chip .jc-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--steel); }
+  .jobs-empty{ font-size:13px; color:var(--steel); font-style:italic; }
+  .config-note{
+    font-size:12px; color:var(--steel); background:rgba(232,98,44,.1);
+    border:1px dashed var(--hivis); border-radius:3px; padding:10px 12px; margin-top:8px;
+  }
 </style>
 </head>
 <body>
@@ -252,6 +355,9 @@
 <main>
   <section class="panel">
     <div class="panel-title">Work Order <span>#001</span></div>
+
+    <label for="jobName">Job name</label>
+    <input type="text" id="jobName" placeholder="e.g. Smith Kitchen">
 
     <label for="projectType">Project type</label>
     <select id="projectType"></select>
@@ -277,6 +383,19 @@
 
     <label for="notes">Notes (optional, doesn't affect price yet)</label>
     <input type="text" id="notes" placeholder="e.g. tight access, HOA permit needed">
+
+    <div class="gauges">
+      <div class="gauge-row">
+        <div class="gauge-label">Cost tier</div>
+        <div class="gauge-track"><div class="gauge-fill" id="costGauge"></div></div>
+        <div class="gauge-tag" id="costTag">STD</div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-label">Difficulty</div>
+        <div class="gauge-track"><div class="gauge-fill good" id="diffGauge"></div></div>
+        <div class="gauge-tag" id="diffTag">—</div>
+      </div>
+    </div>
   </section>
 
   <section class="panel" style="padding:0; border:none; background:none;">
@@ -292,45 +411,108 @@
         </div>
       </div>
 
-      <div class="line-item"><span class="label">Materials &amp; labor (low)</span><span class="fill"></span><span class="val" id="lowVal">$0</span></div>
-      <div class="line-item"><span class="label">Materials &amp; labor (high)</span><span class="fill"></span><span class="val" id="highVal">$0</span></div>
-      <div class="line-item"><span class="label">Permits &amp; fees (est.)</span><span class="fill"></span><span class="val" id="permitVal">$0</span></div>
-      <div class="line-item"><span class="label">Contingency (12%)</span><span class="fill"></span><span class="val" id="contVal">$0</span></div>
+      <div class="confidence">
+        <div class="ring" id="confRing" data-pct="0" style="--pct:0;"></div>
+        <div class="checks">
+          <b>Confidence: <span id="confPct">0</span>%</b>
+          <span id="chkZip">✔ ZIP code</span>
+          <span id="chkSize">✔ Project size</span>
+          <span id="chkDb">✔ National pricing database</span>
+          <span id="chkRegion">✔ Regional labor index</span>
+        </div>
+      </div>
+
+      <div class="calc-status" id="calcStatus"></div>
+
+      <div id="breakdownList"></div>
 
       <div class="totals">
+        <div class="line-item show"><span class="label">Permits &amp; fees (est.)</span><span class="fill"></span><span class="val" id="permitVal">$0</span></div>
+        <div class="line-item show"><span class="label">Contingency (12%)</span><span class="fill"></span><span class="val" id="contVal">$0</span></div>
         <div class="grand">
           <span class="lbl">Total range</span>
           <span class="amt" id="totalVal">$0 – $0</span>
         </div>
       </div>
 
+      <div class="section-tag">Estimated timeline</div>
+      <div class="timeline" id="timelineRow"></div>
+      <div class="tl-total" id="timelineTotal"></div>
+
+      <div class="scope-head">
+        <div class="section-tag" style="margin:0; border:none; padding:0;">Scope of work</div>
+        <span class="pro-badge">PRO</span>
+      </div>
+      <button class="scope-btn" id="scopeBtn" onclick="generateScope()">Generate scope of work (AI)</button>
+      <div class="scope-status" id="scopeStatus"></div>
+      <ul class="scope-list" id="scopeList"></ul>
+
       <p class="callout">This is a ballpark from typical national price ranges plus a regional index — not a bid. Actual pricing depends on scope, condition, access, and local labor rates. Get 2–3 contractor quotes before committing.</p>
+
+      <div class="save-row">
+        <button class="save-btn" id="saveBtn" onclick="saveJob()">Save this job</button>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+      <div id="configNote"></div>
     </div>
   </section>
 </main>
 
+<section class="jobs-panel">
+  <div class="panel" style="background:none; border:none; padding:0;">
+    <div class="panel-title" style="margin-bottom:12px;">Saved Jobs <span id="jobsCount">0</span></div>
+    <div class="jobs-list" id="jobsList"><span class="jobs-empty">No jobs saved yet — connect Supabase and hit "Save this job."</span></div>
+  </div>
+</section>
+
 <p class="no-gate">Try every project type. Change the zip. No login wall — that's the whole point.</p>
 
 <script>
-// ---- Pricing model (per unit, Standard tier, national baseline) ----
 const PROJECTS = {
-  kitchen:   { label:"Kitchen Renovation", unit:"sqft", unitLabel:"Kitchen area (sq ft)", low:120, high:275 },
-  bathroom:  { label:"Bathroom Renovation", unit:"sqft", unitLabel:"Bathroom area (sq ft)", low:150, high:350 },
-  roofing:   { label:"Roofing", unit:"sqft", unitLabel:"Roof area (sq ft)", low:4.5, high:11 },
-  siding:    { label:"Siding", unit:"sqft", unitLabel:"Exterior wall area (sq ft)", low:6, high:12 },
-  painting:  { label:"Interior/Exterior Painting", unit:"sqft", unitLabel:"Floor area to paint (sq ft)", low:2.5, high:6.5 },
-  flooring:  { label:"Flooring Installation", unit:"sqft", unitLabel:"Floor area (sq ft)", low:5, high:18 },
-  plumbing:  { label:"Plumbing Work", unit:"fixture", unitLabel:"Number of fixtures", low:150, high:500 },
-  fencing:   { label:"Fencing", unit:"linft", unitLabel:"Fence length (linear ft)", low:25, high:60 },
-  decking:   { label:"Decking", unit:"sqft", unitLabel:"Deck area (sq ft)", low:25, high:70 },
-  general:   { label:"General Remodeling", unit:"sqft", unitLabel:"Renovated area (sq ft)", low:100, high:250 },
-  newbuild:  { label:"New Construction", unit:"sqft", unitLabel:"Building footprint (sq ft)", low:150, high:400 },
-  aduAttached: { label:"ADU — Attached", unit:"sqft", unitLabel:"ADU floor area (sq ft)", low:250, high:450 },
-  aduDetached: { label:"ADU — Detached", unit:"sqft", unitLabel:"ADU floor area (sq ft)", low:300, high:600 },
-  demo:      { label:"Demolition & Cleanup", unit:"sqft", unitLabel:"Area to clear (sq ft)", low:2, high:7 },
+  kitchen:   { label:"Kitchen Renovation", unitLabel:"Kitchen area (sq ft)", low:120, high:275, difficulty:"High",
+    breakdown:[["Demolition",.08],["Cabinetry",.28],["Countertops",.14],["Appliances",.12],["Plumbing",.10],["Electrical",.08],["Flooring",.10],["Painting",.05],["Cleanup",.05]],
+    timeline:{planning:[1,2],construction:[3,6],inspection:[1,1]} },
+  bathroom:  { label:"Bathroom Renovation", unitLabel:"Bathroom area (sq ft)", low:150, high:350, difficulty:"Medium",
+    breakdown:[["Demolition",.10],["Tile",.20],["Vanity & Fixtures",.18],["Plumbing",.16],["Electrical",.10],["Shower / Tub",.14],["Painting",.06],["Cleanup",.06]],
+    timeline:{planning:[1,2],construction:[2,4],inspection:[1,1]} },
+  roofing:   { label:"Roofing", unitLabel:"Roof area (sq ft)", low:4.5, high:11, difficulty:"Medium",
+    breakdown:[["Tear-off & disposal",.12],["Underlayment",.10],["Roofing material",.45],["Flashing & vents",.13],["Install labor",.15],["Cleanup",.05]],
+    timeline:{planning:[1,1],construction:[1,2],inspection:[1,1]} },
+  siding:    { label:"Siding", unitLabel:"Exterior wall area (sq ft)", low:6, high:12, difficulty:"Medium",
+    breakdown:[["Removal",.10],["Siding material",.45],["House wrap / insulation",.12],["Trim & flashing",.13],["Install labor",.15],["Cleanup",.05]],
+    timeline:{planning:[1,1],construction:[1,3],inspection:[1,1]} },
+  painting:  { label:"Interior/Exterior Painting", unitLabel:"Floor area to paint (sq ft)", low:2.5, high:6.5, difficulty:"Low",
+    breakdown:[["Prep & patching",.15],["Primer",.10],["Paint material",.25],["Application labor",.40],["Cleanup",.10]],
+    timeline:{planning:[0,1],construction:[1,2],inspection:[0,0]} },
+  flooring:  { label:"Flooring Installation", unitLabel:"Floor area (sq ft)", low:5, high:18, difficulty:"Low",
+    breakdown:[["Demo / removal",.10],["Subfloor prep",.12],["Flooring material",.45],["Underlayment",.08],["Install labor",.20],["Cleanup",.05]],
+    timeline:{planning:[1,1],construction:[1,2],inspection:[0,1]} },
+  plumbing:  { label:"Plumbing Work", unitLabel:"Number of fixtures", low:150, high:500, difficulty:"Medium",
+    breakdown:[["Fixtures",.35],["Piping & fittings",.20],["Labor",.35],["Permits & inspection",.10]],
+    timeline:{planning:[0,1],construction:[1,2],inspection:[1,1]} },
+  fencing:   { label:"Fencing", unitLabel:"Fence length (linear ft)", low:25, high:60, difficulty:"Low",
+    breakdown:[["Posts & concrete",.15],["Fencing material",.45],["Gates & hardware",.10],["Install labor",.25],["Cleanup",.05]],
+    timeline:{planning:[0,1],construction:[1,2],inspection:[0,1]} },
+  decking:   { label:"Decking", unitLabel:"Deck area (sq ft)", low:25, high:70, difficulty:"Medium",
+    breakdown:[["Framing / substructure",.25],["Decking material",.35],["Railings",.15],["Install labor",.20],["Cleanup",.05]],
+    timeline:{planning:[1,1],construction:[1,3],inspection:[1,1]} },
+  general:   { label:"General Remodeling", unitLabel:"Renovated area (sq ft)", low:100, high:250, difficulty:"High",
+    breakdown:[["Demolition",.10],["Framing",.15],["Electrical",.12],["Plumbing",.12],["Drywall & paint",.15],["Flooring",.12],["Fixtures & finishes",.15],["Cleanup",.09]],
+    timeline:{planning:[2,3],construction:[4,8],inspection:[1,2]} },
+  newbuild:  { label:"New Construction", unitLabel:"Building footprint (sq ft)", low:150, high:400, difficulty:"High",
+    breakdown:[["Foundation",.15],["Framing",.20],["Roofing",.10],["Electrical & plumbing rough-in",.15],["Insulation & drywall",.12],["Interior finishes",.18],["Exterior finishes",.10]],
+    timeline:{planning:[4,8],construction:[16,32],inspection:[2,4]} },
+  aduAttached: { label:"ADU — Attached", unitLabel:"ADU floor area (sq ft)", low:250, high:450, difficulty:"High",
+    breakdown:[["Foundation / tie-in framing",.15],["Electrical & plumbing",.18],["Insulation & drywall",.12],["Interior finishes",.20],["Kitchen / bath fixtures",.15],["Exterior finishes",.10],["Cleanup",.10]],
+    timeline:{planning:[3,6],construction:[8,14],inspection:[2,3]} },
+  aduDetached: { label:"ADU — Detached", unitLabel:"ADU floor area (sq ft)", low:300, high:600, difficulty:"High",
+    breakdown:[["Foundation",.15],["Framing & roofing",.20],["Electrical & plumbing",.18],["Insulation & drywall",.12],["Interior finishes",.15],["Kitchen / bath fixtures",.12],["Utility hookups",.08]],
+    timeline:{planning:[4,8],construction:[10,18],inspection:[2,4]} },
+  demo:      { label:"Demolition & Cleanup", unitLabel:"Area to clear (sq ft)", low:2, high:7, difficulty:"Low",
+    breakdown:[["Interior demo",.40],["Debris removal & hauling",.35],["Disposal fees",.15],["Cleanup",.10]],
+    timeline:{planning:[0,1],construction:[1,2],inspection:[0,1]} },
 };
 
-// Very rough regional index by zip's leading digit (US Census zip prefix ~ region)
 function regionIndex(zip){
   const d = (zip || "").trim()[0];
   const table = { "0":1.18,"1":1.15,"2":1.05,"3":0.92,"4":0.95,"5":0.95,"6":0.93,"7":0.9,"8":1.0,"9":1.28 };
@@ -341,6 +523,7 @@ function regionLabel(zip){
   const names = {"0":"Northeast (NY/NJ/PR)","1":"Northeast","2":"Mid‑Atlantic","3":"Southeast","4":"Southeast/KY","5":"Midwest","6":"Central","7":"South Central","8":"Mountain West","9":"West Coast"};
   return names[d] ? `${names[d]} index ×${regionIndex(zip).toFixed(2)}` : "National average index ×1.00";
 }
+function isValidZip(zip){ return /^\d{5}$/.test((zip||"").trim()); }
 
 const sel = document.getElementById('projectType');
 Object.entries(PROJECTS).forEach(([key,p])=>{
@@ -362,12 +545,48 @@ document.querySelectorAll('.tier-btn').forEach(btn=>{
 
 const fmt = n => "$" + Math.round(n).toLocaleString('en-US');
 
+function animateNumber(el, from, to, duration, formatter){
+  const start = performance.now();
+  function tick(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const val = from + (to - from) * eased;
+    el.textContent = formatter(val);
+    if(t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function animateRange(el, fromLow, toLow, fromHigh, toHigh, duration){
+  const start = performance.now();
+  function tick(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const lo = fromLow + (toLow - fromLow) * eased;
+    const hi = fromHigh + (toHigh - fromHigh) * eased;
+    el.textContent = `${fmt(lo)} – ${fmt(hi)}`;
+    if(t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ---- Supabase config: replace with your own project to enable saving ----
+const SUPABASE_URL = "https://qzmwvnzrtvnpjfppajzd.supabase.co";       // e.g. https://xxxxxxxx.supabase.co
+const SUPABASE_ANON_KEY = "sb_publishable_FMaabZVqTSozY4LgAOW7HA_vE2p6GIk";
+const SUPABASE_CONFIGURED = SUPABASE_URL.startsWith("http") && !SUPABASE_ANON_KEY.startsWith("YOUR_");
+const sbClient = SUPABASE_CONFIGURED ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+let currentEstimate = null;
+let renderToken = 0;
+
 function render(){
+  const myToken = ++renderToken;
   const key = sel.value;
   const p = PROJECTS[key];
   const qty = parseFloat(document.getElementById('qty').value) || 0;
   const zip = document.getElementById('zip').value;
   const region = regionIndex(zip);
+  const zipValid = isValidZip(zip);
+  const qtyValid = qty > 0;
 
   document.getElementById('qtyLabel').textContent = p.unitLabel;
   document.getElementById('regionHint').textContent = `Regional cost index applied: ${regionLabel(zip)}. Rough approximation — always confirm with local bids.`;
@@ -382,11 +601,75 @@ function render(){
   const totalLow = low + permitLow + contLow;
   const totalHigh = high + permitHigh + contHigh;
 
-  document.getElementById('lowVal').textContent = fmt(low);
-  document.getElementById('highVal').textContent = fmt(high);
-  document.getElementById('permitVal').textContent = `${fmt(permitLow)} – ${fmt(permitHigh)}`;
-  document.getElementById('contVal').textContent = `${fmt(contLow)} – ${fmt(contHigh)}`;
-  document.getElementById('totalVal').textContent = `${fmt(totalLow)} – ${fmt(totalHigh)}`;
+  const checks = { zip: zipValid, size: qtyValid, db: true, region: zipValid };
+  const pct = Math.round(((checks.zip?25:0) + (checks.size?25:0) + (checks.db?25:0) + (checks.region?25:0)) * 0.92);
+  document.getElementById('confPct').textContent = pct;
+  const ring = document.getElementById('confRing');
+  ring.style.setProperty('--pct', pct);
+  ring.setAttribute('data-pct', pct);
+  document.getElementById('chkZip').className = checks.zip ? '' : 'off';
+  document.getElementById('chkSize').className = checks.size ? '' : 'off';
+  document.getElementById('chkDb').className = checks.db ? '' : 'off';
+  document.getElementById('chkRegion').className = checks.region ? '' : 'off';
+
+  const costPct = tier===0.75 ? 33 : tier===1.5 ? 100 : 66;
+  const costTag = tier===0.75 ? "LOW" : tier===1.5 ? "HIGH" : "STD";
+  document.getElementById('costGauge').style.width = costPct + "%";
+  document.getElementById('costTag').textContent = costTag;
+  const diffMap = {Low:33, Medium:66, High:100};
+  document.getElementById('diffGauge').style.width = diffMap[p.difficulty] + "%";
+  document.getElementById('diffTag').textContent = p.difficulty.toUpperCase();
+
+  const tlRow = document.getElementById('timelineRow');
+  tlRow.innerHTML = '';
+  const steps = [["Planning", p.timeline.planning], ["Construction", p.timeline.construction], ["Inspections", p.timeline.inspection]];
+  let totalMin = 0, totalMax = 0;
+  steps.forEach(([name, range])=>{
+    totalMin += range[0]; totalMax += range[1];
+    const div = document.createElement('div');
+    div.className = 'tl-step';
+    const weeksText = range[0]===0 && range[1]===0 ? "—" : (range[0]===range[1] ? `${range[0]} wk` : `${range[0]}–${range[1]} wk`);
+    div.innerHTML = `<div class="tl-name">${name}</div><div class="tl-weeks">${weeksText}</div>`;
+    tlRow.appendChild(div);
+  });
+  document.getElementById('timelineTotal').textContent = `Total: ${totalMin}–${totalMax} weeks`;
+
+  currentEstimate = {
+    jobName: document.getElementById('jobName').value.trim(),
+    projectKey: key, projectLabel: p.label, unitLabel: p.unitLabel,
+    qty, zip, tier, totalLow, totalHigh, notes: document.getElementById('notes').value.trim(), scope: null
+  };
+  document.getElementById('scopeList').innerHTML = '';
+  document.getElementById('scopeStatus').textContent = '';
+
+  const statusEl = document.getElementById('calcStatus');
+  statusEl.innerHTML = '<span class="dot"></span>Calculating…';
+
+  const listEl = document.getElementById('breakdownList');
+  listEl.innerHTML = '<div class="section-tag">Price breakdown</div>';
+  const rows = [];
+  p.breakdown.forEach(([label, weight])=>{
+    const row = document.createElement('div');
+    row.className = 'line-item';
+    row.innerHTML = `<span class="label">${label}</span><span class="fill"></span><span class="val">$0</span>`;
+    listEl.appendChild(row);
+    rows.push({el: row.querySelector('.val'), target: ((low+high)/2) * weight});
+  });
+
+  setTimeout(()=>{
+    if(myToken !== renderToken) return;
+    statusEl.textContent = '';
+    rows.forEach((r, i)=>{
+      setTimeout(()=>{
+        if(myToken !== renderToken) return;
+        r.el.parentElement.classList.add('show');
+        animateNumber(r.el, 0, r.target, 500, v => fmt(v));
+      }, i * 60);
+    });
+    animateRange(document.getElementById('totalVal'), totalLow*0.4, totalLow, totalHigh*0.4, totalHigh, 700);
+    animateNumber(document.getElementById('permitVal'), 0, permitLow, 600, v => `${fmt(v)} – ${fmt(permitHigh)}`);
+    animateNumber(document.getElementById('contVal'), 0, contLow, 600, v => `${fmt(v)} – ${fmt(contHigh)}`);
+  }, 400);
 }
 
 ['projectType','qty','zip'].forEach(id=>{
@@ -394,7 +677,140 @@ function render(){
   document.getElementById(id).addEventListener('change', render);
 });
 
+// ---- AI Scope of Work (calls Claude via the Anthropic Messages API) ----
+async function generateScope(){
+  if(!currentEstimate) return;
+  const btn = document.getElementById('scopeBtn');
+  const statusEl = document.getElementById('scopeStatus');
+  const listEl = document.getElementById('scopeList');
+  btn.disabled = true;
+  listEl.innerHTML = '';
+  statusEl.textContent = 'Generating scope of work…';
+
+  const tierName = currentEstimate.tier===0.75 ? "economy" : currentEstimate.tier===1.5 ? "premium" : "standard";
+  const prompt = `You are a general contractor's estimator. Write a scope-of-work checklist for this job:
+Project: ${currentEstimate.projectLabel}
+Size: ${currentEstimate.qty} (${currentEstimate.unitLabel})
+Finish tier: ${tierName}
+Zip code: ${currentEstimate.zip || "not provided"}
+Notes: ${currentEstimate.notes || "none"}
+
+Return ONLY a JSON array of 6-10 short task strings in the order work would happen. No markdown, no preamble, no explanation, no code fences — just the raw JSON array.`;
+
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    let tasks;
+    try{ tasks = JSON.parse(cleaned); }
+    catch{ tasks = cleaned.split("\n").map(l => l.replace(/^[-*\d.\s]+/, "").trim()).filter(Boolean); }
+
+    listEl.innerHTML = '';
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      listEl.appendChild(li);
+    });
+    currentEstimate.scope = tasks;
+    statusEl.textContent = '';
+  } catch(err){
+    statusEl.textContent = "Couldn't generate a scope of work — try again.";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---- Save / load jobs via Supabase ----
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+
+async function saveJob(){
+  const statusEl = document.getElementById('saveStatus');
+  if(!SUPABASE_CONFIGURED){
+    statusEl.textContent = "Supabase isn't connected yet — see the setup note below.";
+    return;
+  }
+  if(!currentEstimate){ return; }
+  const jobName = currentEstimate.jobName || `${currentEstimate.projectLabel} — ${currentEstimate.zip || 'no zip'}`;
+  statusEl.textContent = "Saving…";
+  const { error } = await sbClient.from('estimates').insert({
+    job_name: jobName,
+    project_type: currentEstimate.projectKey,
+    project_label: currentEstimate.projectLabel,
+    qty: currentEstimate.qty,
+    zip: currentEstimate.zip,
+    tier: currentEstimate.tier,
+    total_low: Math.round(currentEstimate.totalLow),
+    total_high: Math.round(currentEstimate.totalHigh),
+    notes: currentEstimate.notes,
+    scope: currentEstimate.scope
+  });
+  if(error){
+    statusEl.textContent = "Couldn't save — check your Supabase table matches the schema.";
+  } else {
+    statusEl.textContent = "Saved.";
+    loadJobs();
+  }
+}
+
+async function loadJobs(){
+  const listEl = document.getElementById('jobsList');
+  const countEl = document.getElementById('jobsCount');
+  if(!SUPABASE_CONFIGURED){
+    listEl.innerHTML = '<span class="jobs-empty">No jobs saved yet — connect Supabase and hit "Save this job."</span>';
+    countEl.textContent = '0';
+    return;
+  }
+  const { data, error } = await sbClient
+    .from('estimates')
+    .select('*')
+    .order('created_at', { ascending:false })
+    .limit(20);
+  if(error || !data || data.length === 0){
+    listEl.innerHTML = '<span class="jobs-empty">No jobs saved yet.</span>';
+    countEl.textContent = '0';
+    return;
+  }
+  countEl.textContent = data.length;
+  listEl.innerHTML = '';
+  data.forEach(job => {
+    const chip = document.createElement('div');
+    chip.className = 'job-chip';
+    chip.innerHTML = `<span class="jc-name">${job.job_name}</span><span class="jc-meta">${fmt(job.total_low)}–${fmt(job.total_high)} · ${fmtDate(job.created_at)}</span>`;
+    chip.addEventListener('click', () => {
+      document.getElementById('jobName').value = job.job_name;
+      sel.value = job.project_type;
+      document.getElementById('qty').value = job.qty;
+      document.getElementById('zip').value = job.zip;
+      document.getElementById('notes').value = job.notes || '';
+      const tierBtn = document.querySelector(`.tier-btn[data-tier="${job.tier}"]`) || document.querySelector('.tier-btn[data-tier="1"]');
+      document.querySelectorAll('.tier-btn').forEach(b=>b.classList.remove('active'));
+      tierBtn.classList.add('active');
+      tier = parseFloat(tierBtn.dataset.tier);
+      render();
+    });
+    listEl.appendChild(chip);
+  });
+}
+
+if(!SUPABASE_CONFIGURED){
+  document.getElementById('configNote').innerHTML =
+    '<p class="config-note">Saving is off until Supabase is connected — swap in your project URL and anon key at the top of the script, then run the schema in the setup notes.</p>';
+}
+
 render();
+loadJobs();
 </script>
 </body>
 </html>
