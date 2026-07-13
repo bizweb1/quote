@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
   :root{
     --blueprint:#0E2F4D;
@@ -396,6 +397,35 @@
   }
   .save-btn:hover{ background:#358a5e; }
   .save-status{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--line-cyan); }
+
+  /* Report details / PDF */
+  .report-section{ margin-top:22px; padding-top:18px; border-top:1px dashed rgba(110,198,224,.4); }
+  .report-title{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--line-cyan); margin-bottom:12px;
+  }
+  .logo-row{ display:flex; align-items:center; gap:12px; margin-top:6px; }
+  .logo-preview{
+    width:56px; height:56px; border:1px dashed rgba(110,198,224,.4); border-radius:4px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
+    font-size:9px; color:var(--steel); text-align:center; background:rgba(244,241,232,.04);
+  }
+  .logo-preview img{ width:100%; height:100%; object-fit:contain; }
+  .file-btn{
+    background:transparent; border:1px solid rgba(110,198,224,.4); color:var(--paper);
+    border-radius:3px; padding:9px 12px; font-size:12px; cursor:pointer; font-family:'IBM Plex Sans', sans-serif;
+  }
+  .file-btn:hover{ border-color:var(--hivis); }
+
+  .pdf-btn{
+    width:100%; margin-top:14px;
+    background:var(--blueprint-deep); color:var(--paper); border:1px solid var(--line-cyan);
+    border-radius:4px; padding:14px 20px; font-family:'Big Shoulders Display', sans-serif;
+    font-weight:700; font-size:16px; letter-spacing:.03em; text-transform:uppercase;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .pdf-btn:hover{ background:#123a5c; }
+  .pdf-btn:disabled{ opacity:.5; cursor:default; }
 </style>
 </head>
 <body>
@@ -477,6 +507,46 @@
       <div class="photo-gallery-title">Recent <span id="photoGalleryLabel">Kitchens</span></div>
       <div class="photo-grid" id="photoGrid"></div>
     </div>
+
+    <div class="report-section">
+      <div class="report-title">Report Details (for PDF)</div>
+
+      <label for="companyName">Company name</label>
+      <input type="text" id="companyName" placeholder="e.g. Valor Media Group">
+      <div class="row">
+        <div>
+          <label for="companyPhone">Company phone</label>
+          <input type="text" id="companyPhone" placeholder="(555) 555-5555">
+        </div>
+        <div>
+          <label for="companyEmail">Company email</label>
+          <input type="text" id="companyEmail" placeholder="hello@company.com">
+        </div>
+      </div>
+      <label for="companyLicense">License / insurance (optional)</label>
+      <input type="text" id="companyLicense" placeholder="e.g. Lic #123456, Bonded &amp; Insured">
+      <label>Logo</label>
+      <div class="logo-row">
+        <div class="logo-preview" id="logoPreview">No logo</div>
+        <input type="file" id="logoInput" accept="image/png,image/jpeg" style="display:none;">
+        <button type="button" class="file-btn" onclick="document.getElementById('logoInput').click()">Upload logo</button>
+      </div>
+
+      <label for="customerName" style="margin-top:18px;">Customer name</label>
+      <input type="text" id="customerName" placeholder="e.g. John Smith">
+      <div class="row">
+        <div>
+          <label for="customerPhone">Customer phone</label>
+          <input type="text" id="customerPhone" placeholder="(555) 555-5555">
+        </div>
+        <div>
+          <label for="customerEmail">Customer email</label>
+          <input type="text" id="customerEmail" placeholder="customer@email.com">
+        </div>
+      </div>
+      <label for="customerAddress">Project address</label>
+      <input type="text" id="customerAddress" placeholder="e.g. 58 San Carlos Ave, San Bruno CA">
+    </div>
   </section>
 
   <section class="panel" style="padding:0; border:none; background:none;">
@@ -547,6 +617,7 @@
         <button class="save-btn" id="saveBtn" onclick="saveJob()">💾 Save Project</button>
         <span class="save-status" id="saveStatus"></span>
       </div>
+      <button class="pdf-btn" id="pdfBtn" onclick="downloadPDF()">📄 Download PDF Report</button>
       <div id="configNote"></div>
     </div>
   </section>
@@ -649,6 +720,21 @@ document.querySelectorAll('.mode-opt').forEach(opt=>{
 });
 ['profitPct','equipCost','travelCost'].forEach(id=>{
   document.getElementById(id).addEventListener('input', render);
+});
+
+// ---- Logo upload (stored as base64 for embedding in the PDF) ----
+let logoDataUrl = null;
+let logoFormat = 'PNG';
+document.getElementById('logoInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    logoDataUrl = reader.result;
+    logoFormat = file.type.includes('png') ? 'PNG' : 'JPEG';
+    document.getElementById('logoPreview').innerHTML = `<img src="${logoDataUrl}" alt="logo">`;
+  };
+  reader.readAsDataURL(file);
 });
 
 const sel = document.getElementById('projectType');
@@ -789,9 +875,16 @@ function render(){
   currentEstimate = {
     jobName: document.getElementById('jobName').value.trim(),
     projectKey: key, projectLabel: p.label, unitLabel: p.unitLabel,
-    qty, zip, tier, totalLow, totalHigh, notes: document.getElementById('notes').value.trim(), scope: null,
+    qty, zip, tier, tierName: tier===0.75?"Economy":tier===1.5?"Premium":"Standard",
+    totalLow, totalHigh, notes: document.getElementById('notes').value.trim(), scope: null,
     region, regionText: regionLabel(zip), difficulty: p.difficulty,
-    topDrivers: [...p.breakdown].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([label,w])=>`${label} (${Math.round(w*100)}%)`)
+    topDrivers: [...p.breakdown].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([label,w])=>`${label} (${Math.round(w*100)}%)`),
+    breakdownRows: p.breakdown.map(([label,weight])=>({ label, amount: ((low+high)/2)*weight })),
+    permitLow, permitHigh, contLow, contHigh,
+    timelineSteps: steps.map(([name,range])=>({
+      name, text: range[0]===0 && range[1]===0 ? "—" : (range[0]===range[1] ? `${range[0]} wk` : `${range[0]}–${range[1]} wk`)
+    })),
+    timelineTotalText: `${totalMin}–${totalMax} weeks`
   };
   document.getElementById('scopeList').innerHTML = '';
   document.getElementById('scopeStatus').textContent = '';
@@ -945,6 +1038,158 @@ Return ONLY a JSON array of 4-5 short plain-English sentences explaining what's 
   }
 }
 
+// ---- PDF Report ----
+function downloadPDF(){
+  if(!currentEstimate){ return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const marginX = 48;
+  let y = 54;
+
+  const companyName = document.getElementById('companyName').value.trim() || "Your Company";
+  const companyPhone = document.getElementById('companyPhone').value.trim();
+  const companyEmail = document.getElementById('companyEmail').value.trim();
+  const companyLicense = document.getElementById('companyLicense').value.trim();
+  const customerName = document.getElementById('customerName').value.trim();
+  const customerPhone = document.getElementById('customerPhone').value.trim();
+  const customerEmail = document.getElementById('customerEmail').value.trim();
+  const customerAddress = document.getElementById('customerAddress').value.trim();
+
+  const checkBreak = (need) => {
+    if(y + need > pageH - 60){ doc.addPage(); y = 54; }
+  };
+
+  // Header: logo + company
+  if(logoDataUrl){
+    try{ doc.addImage(logoDataUrl, logoFormat, marginX, y - 18, 60, 60); }catch(e){}
+  }
+  const textX = logoDataUrl ? marginX + 72 : marginX;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+  doc.text(companyName, textX, y);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  let contactLine = [companyPhone, companyEmail].filter(Boolean).join("  ·  ");
+  if(contactLine){ y += 14; doc.text(contactLine, textX, y); }
+  if(companyLicense){ y += 13; doc.text(companyLicense, textX, y); }
+  doc.setTextColor(0,0,0);
+  y += 30;
+
+  // Title bar
+  doc.setFillColor(232,98,44);
+  doc.rect(marginX, y, pageW - marginX*2, 4, 'F');
+  y += 24;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+  doc.text("Project Estimate", marginX, y);
+  y += 16;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(90,90,90);
+  doc.text(`Prepared ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`, marginX, y);
+  doc.setTextColor(0,0,0);
+  y += 26;
+
+  // Customer + project info (two columns)
+  const colW = (pageW - marginX*2 - 20) / 2;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+  doc.text("PREPARED FOR", marginX, y);
+  doc.text("PROJECT", marginX + colW + 20, y);
+  y += 14;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  const custLines = [customerName || "—", customerAddress, customerPhone, customerEmail].filter(Boolean);
+  const projLines = [
+    currentEstimate.projectLabel,
+    `${currentEstimate.qty} ${currentEstimate.unitLabel.replace(/\(.*\)/,'').trim()}`,
+    `Finish tier: ${currentEstimate.tierName}`,
+    `Zip: ${currentEstimate.zip || "—"}`
+  ];
+  const rowsN = Math.max(custLines.length, projLines.length);
+  for(let i=0;i<rowsN;i++){
+    if(custLines[i]) doc.text(String(custLines[i]), marginX, y);
+    if(projLines[i]) doc.text(String(projLines[i]), marginX + colW + 20, y);
+    y += 13;
+  }
+  y += 14;
+
+  // Price breakdown table
+  checkBreak(40);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+  doc.text("Price Breakdown", marginX, y);
+  y += 16;
+  doc.setDrawColor(200,200,200);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  currentEstimate.breakdownRows.forEach(row=>{
+    checkBreak(18);
+    doc.text(row.label, marginX, y);
+    doc.text(fmt(row.amount), pageW - marginX, y, { align: 'right' });
+    y += 16;
+    doc.line(marginX, y-6, pageW - marginX, y-6);
+  });
+  checkBreak(18);
+  doc.text("Permits & fees (est.)", marginX, y);
+  doc.text(`${fmt(currentEstimate.permitLow)} – ${fmt(currentEstimate.permitHigh)}`, pageW - marginX, y, { align: 'right' });
+  y += 16;
+  checkBreak(18);
+  doc.text("Contingency (12%)", marginX, y);
+  doc.text(`${fmt(currentEstimate.contLow)} – ${fmt(currentEstimate.contHigh)}`, pageW - marginX, y, { align: 'right' });
+  y += 22;
+
+  // Total
+  checkBreak(40);
+  doc.setFillColor(232,98,44);
+  doc.rect(marginX, y, pageW - marginX*2, 32, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(13);
+  doc.text("TOTAL RANGE", marginX + 12, y + 21);
+  doc.text(`${fmt(currentEstimate.totalLow)} – ${fmt(currentEstimate.totalHigh)}`, pageW - marginX - 12, y + 21, { align: 'right' });
+  doc.setTextColor(0,0,0);
+  y += 50;
+
+  // Timeline
+  checkBreak(50);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+  doc.text("Estimated Timeline", marginX, y);
+  y += 16;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  currentEstimate.timelineSteps.forEach(step=>{
+    doc.text(`${step.name}: ${step.text}`, marginX, y);
+    y += 14;
+  });
+  doc.text(`Total: ${currentEstimate.timelineTotalText}`, marginX, y);
+  y += 26;
+
+  // Scope of work (if generated)
+  if(currentEstimate.scope && currentEstimate.scope.length){
+    checkBreak(40);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+    doc.text("Scope of Work", marginX, y);
+    y += 16;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    currentEstimate.scope.forEach((task, i)=>{
+      checkBreak(30);
+      const lines = doc.splitTextToSize(`${i+1}. ${task}`, pageW - marginX*2);
+      doc.text(lines, marginX, y);
+      y += lines.length * 13 + 3;
+    });
+    y += 14;
+  }
+
+  // Disclaimer footer
+  checkBreak(50);
+  doc.setDrawColor(232,98,44);
+  doc.setLineWidth(2);
+  doc.line(marginX, y, marginX, y + 34);
+  doc.setLineWidth(1);
+  doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  const disclaimer = doc.splitTextToSize(
+    "This is a ballpark estimate from typical national price ranges plus a regional cost index — not a binding bid. Actual pricing depends on scope, site condition, access, and local labor rates.",
+    pageW - marginX*2 - 16
+  );
+  doc.text(disclaimer, marginX + 12, y + 12);
+  doc.setTextColor(0,0,0);
+
+  const fileName = (currentEstimate.jobName || currentEstimate.projectLabel).replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  doc.save(`${fileName || 'estimate'}.pdf`);
+}
+
 // ---- Save / load jobs via Supabase ----
 function fmtDate(iso){
   const d = new Date(iso);
@@ -970,7 +1215,15 @@ async function saveJob(){
     total_low: Math.round(currentEstimate.totalLow),
     total_high: Math.round(currentEstimate.totalHigh),
     notes: currentEstimate.notes,
-    scope: currentEstimate.scope
+    scope: currentEstimate.scope,
+    company_name: document.getElementById('companyName').value.trim(),
+    company_phone: document.getElementById('companyPhone').value.trim(),
+    company_email: document.getElementById('companyEmail').value.trim(),
+    company_license: document.getElementById('companyLicense').value.trim(),
+    customer_name: document.getElementById('customerName').value.trim(),
+    customer_phone: document.getElementById('customerPhone').value.trim(),
+    customer_email: document.getElementById('customerEmail').value.trim(),
+    customer_address: document.getElementById('customerAddress').value.trim()
   });
   if(error){
     statusEl.textContent = "Couldn't save — check your Supabase table matches the schema.";
@@ -1010,6 +1263,14 @@ async function loadJobs(){
       document.getElementById('qty').value = job.qty;
       document.getElementById('zip').value = job.zip;
       document.getElementById('notes').value = job.notes || '';
+      document.getElementById('companyName').value = job.company_name || '';
+      document.getElementById('companyPhone').value = job.company_phone || '';
+      document.getElementById('companyEmail').value = job.company_email || '';
+      document.getElementById('companyLicense').value = job.company_license || '';
+      document.getElementById('customerName').value = job.customer_name || '';
+      document.getElementById('customerPhone').value = job.customer_phone || '';
+      document.getElementById('customerEmail').value = job.customer_email || '';
+      document.getElementById('customerAddress').value = job.customer_address || '';
       const tierBtn = document.querySelector(`.tier-btn[data-tier="${job.tier}"]`) || document.querySelector('.tier-btn[data-tier="1"]');
       document.querySelectorAll('.tier-btn').forEach(b=>b.classList.remove('active'));
       tierBtn.classList.add('active');
