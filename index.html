@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>True Square — Instant Renovation Estimate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blueprint:#0E2F4D;
+    --blueprint-deep:#0A2337;
+    --line-cyan:#6EC6E0;
+    --paper:#F4F1E8;
+    --paper-shadow:#DCD7C7;
+    --ink:#16212C;
+    --hivis:#E8622C;
+    --hivis-dark:#C24A1D;
+    --steel:#8FA6B8;
+  }
+  *{box-sizing:border-box;}
+  html{ background-color:var(--blueprint-deep); }
+  body{
+    margin:0;
+    background-color:var(--blueprint);
+    background-image:
+      linear-gradient(rgba(110,198,224,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(110,198,224,0.07) 1px, transparent 1px);
+    background-size:28px 28px;
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--paper);
+    min-height:100vh;
+  }
+  header{
+    padding:36px 24px 18px;
+    text-align:center;
+  }
+  .wordmark{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--paper);
+    margin-bottom:16px;
+  }
+  .wordmark span{color:var(--hivis);}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--line-cyan);
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size:clamp(34px, 6vw, 58px);
+    line-height:.95;
+    margin:0;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+  }
+  h1 span{color:var(--hivis);}
+  .subhead{
+    max-width:520px;
+    margin:14px auto 0;
+    color:var(--steel);
+    font-size:15px;
+    line-height:1.5;
+  }
+  .subhead strong{color:var(--paper);}
+
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:20px 20px 80px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:28px;
+  }
+  @media (max-width:860px){ main{grid-template-columns:1fr;} }
+
+  .panel{
+    border:1px solid rgba(110,198,224,.4);
+    border-radius:4px;
+    background:var(--blueprint-deep);
+    padding:24px;
+  }
+  .panel-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--line-cyan);
+    border-bottom:1px dashed rgba(110,198,224,.4);
+    padding-bottom:10px;
+    margin-bottom:20px;
+    display:flex;
+    justify-content:space-between;
+  }
+
+  label{
+    display:block;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--steel);
+    margin:16px 0 6px;
+  }
+  label:first-of-type{margin-top:0;}
+  select, input{
+    width:100%;
+    background:rgba(244,241,232,.06);
+    border:1px solid rgba(110,198,224,.4);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    padding:11px 12px;
+    border-radius:3px;
+    appearance:none;
+  }
+  select:focus, input:focus{
+    outline:2px solid var(--hivis);
+    outline-offset:1px;
+  }
+  select option{color:var(--ink);}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .hint{font-size:12px; color:var(--steel); margin-top:6px; line-height:1.4;}
+
+  .tier-group{display:flex; gap:8px; margin-top:6px;}
+  .tier-btn{
+    flex:1;
+    padding:10px 6px;
+    text-align:center;
+    border:1px solid rgba(110,198,224,.4);
+    border-radius:3px;
+    cursor:pointer;
+    font-size:13px;
+    color:var(--steel);
+    background:transparent;
+  }
+  .tier-btn.active{
+    background:var(--hivis);
+    border-color:var(--hivis);
+    color:#fff;
+    font-weight:600;
+  }
+
+  /* Ledger / paper panel */
+  .ledger{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+    box-shadow:0 18px 40px rgba(0,0,0,.35), 0 0 0 6px var(--paper-shadow) inset;
+    padding:26px 24px 22px;
+    position:relative;
+  }
+  .ledger::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:6px;
+    background:repeating-linear-gradient(90deg, var(--hivis) 0 14px, #fff 14px 28px);
+  }
+  .ledger-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px; margin-bottom:16px;
+  }
+  .ledger-head .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:#6b5d3f;
+  }
+  .ledger-head h2{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-size:26px; margin:2px 0 0; text-transform:uppercase;
+  }
+  .ledger-head .no{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; color:#6b5d3f; text-align:right;
+  }
+
+  .line-item{
+    display:flex; align-items:baseline; gap:8px;
+    padding:8px 0;
+    font-size:14px;
+  }
+  .line-item .label{flex-shrink:0; color:#3a3227;}
+  .line-item .fill{
+    flex:1; border-bottom:1px dotted #8a7f66;
+    transform:translateY(-3px);
+  }
+  .line-item .val{
+    flex-shrink:0; font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+  }
+
+  .totals{
+    margin-top:16px;
+    padding-top:16px;
+    border-top:2px solid var(--ink);
+  }
+  .totals .grand{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--hivis);
+    color:#fff;
+    padding:14px 16px;
+    border-radius:3px;
+    margin-top:10px;
+  }
+  .totals .grand .lbl{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-size:16px; letter-spacing:.04em; text-transform:uppercase;
+  }
+  .totals .grand .amt{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:22px; font-weight:600;
+  }
+
+  .callout{
+    margin-top:18px;
+    font-size:12px;
+    color:#5a5040;
+    line-height:1.5;
+    border-left:3px solid var(--hivis);
+    padding-left:10px;
+  }
+
+  .no-gate{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 20px 40px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.06em;
+    color:var(--line-cyan);
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">True<span>Square</span></div>
+  <div class="eyebrow">Job Ticket · Instant Estimate</div>
+  <h1>What's it<br><span>actually</span> gonna cost?</h1>
+  <p class="subhead">Fill in the ticket. Watch the ledger update. <strong>No account, no phone number, no 7‑day trial required</strong> to see a number.</p>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-title">Work Order <span>#001</span></div>
+
+    <label for="projectType">Project type</label>
+    <select id="projectType"></select>
+
+    <div class="row">
+      <div>
+        <label id="qtyLabel" for="qty">Area (sq ft)</label>
+        <input type="number" id="qty" min="0" value="200">
+      </div>
+      <div>
+        <label for="zip">Zip code</label>
+        <input type="text" id="zip" maxlength="5" placeholder="e.g. 94066" value="94066">
+      </div>
+    </div>
+    <p class="hint" id="regionHint">Regional cost index applied automatically. Rough approximation — always confirm with local bids.</p>
+
+    <label>Finish tier</label>
+    <div class="tier-group" id="tierGroup">
+      <div class="tier-btn" data-tier="0.75">Economy</div>
+      <div class="tier-btn active" data-tier="1">Standard</div>
+      <div class="tier-btn" data-tier="1.5">Premium</div>
+    </div>
+
+    <label for="notes">Notes (optional, doesn't affect price yet)</label>
+    <input type="text" id="notes" placeholder="e.g. tight access, HOA permit needed">
+  </section>
+
+  <section class="panel" style="padding:0; border:none; background:none;">
+    <div class="ledger">
+      <div class="ledger-head">
+        <div>
+          <div class="tag">Estimate Ledger</div>
+          <h2 id="ledgerTitle">Kitchen Renovation</h2>
+        </div>
+        <div class="no">
+          ZIP <span id="ledgerZip">94066</span><br>
+          TIER <span id="ledgerTier">STANDARD</span>
+        </div>
+      </div>
+
+      <div class="line-item"><span class="label">Materials &amp; labor (low)</span><span class="fill"></span><span class="val" id="lowVal">$0</span></div>
+      <div class="line-item"><span class="label">Materials &amp; labor (high)</span><span class="fill"></span><span class="val" id="highVal">$0</span></div>
+      <div class="line-item"><span class="label">Permits &amp; fees (est.)</span><span class="fill"></span><span class="val" id="permitVal">$0</span></div>
+      <div class="line-item"><span class="label">Contingency (12%)</span><span class="fill"></span><span class="val" id="contVal">$0</span></div>
+
+      <div class="totals">
+        <div class="grand">
+          <span class="lbl">Total range</span>
+          <span class="amt" id="totalVal">$0 – $0</span>
+        </div>
+      </div>
+
+      <p class="callout">This is a ballpark from typical national price ranges plus a regional index — not a bid. Actual pricing depends on scope, condition, access, and local labor rates. Get 2–3 contractor quotes before committing.</p>
+    </div>
+  </section>
+</main>
+
+<p class="no-gate">Try every project type. Change the zip. No login wall — that's the whole point.</p>
+
+<script>
+// ---- Pricing model (per unit, Standard tier, national baseline) ----
+const PROJECTS = {
+  kitchen:   { label:"Kitchen Renovation", unit:"sqft", unitLabel:"Kitchen area (sq ft)", low:120, high:275 },
+  bathroom:  { label:"Bathroom Renovation", unit:"sqft", unitLabel:"Bathroom area (sq ft)", low:150, high:350 },
+  roofing:   { label:"Roofing", unit:"sqft", unitLabel:"Roof area (sq ft)", low:4.5, high:11 },
+  siding:    { label:"Siding", unit:"sqft", unitLabel:"Exterior wall area (sq ft)", low:6, high:12 },
+  painting:  { label:"Interior/Exterior Painting", unit:"sqft", unitLabel:"Floor area to paint (sq ft)", low:2.5, high:6.5 },
+  flooring:  { label:"Flooring Installation", unit:"sqft", unitLabel:"Floor area (sq ft)", low:5, high:18 },
+  plumbing:  { label:"Plumbing Work", unit:"fixture", unitLabel:"Number of fixtures", low:150, high:500 },
+  fencing:   { label:"Fencing", unit:"linft", unitLabel:"Fence length (linear ft)", low:25, high:60 },
+  decking:   { label:"Decking", unit:"sqft", unitLabel:"Deck area (sq ft)", low:25, high:70 },
+  general:   { label:"General Remodeling", unit:"sqft", unitLabel:"Renovated area (sq ft)", low:100, high:250 },
+  newbuild:  { label:"New Construction", unit:"sqft", unitLabel:"Building footprint (sq ft)", low:150, high:400 },
+  aduAttached: { label:"ADU — Attached", unit:"sqft", unitLabel:"ADU floor area (sq ft)", low:250, high:450 },
+  aduDetached: { label:"ADU — Detached", unit:"sqft", unitLabel:"ADU floor area (sq ft)", low:300, high:600 },
+  demo:      { label:"Demolition & Cleanup", unit:"sqft", unitLabel:"Area to clear (sq ft)", low:2, high:7 },
+};
+
+// Very rough regional index by zip's leading digit (US Census zip prefix ~ region)
+function regionIndex(zip){
+  const d = (zip || "").trim()[0];
+  const table = { "0":1.18,"1":1.15,"2":1.05,"3":0.92,"4":0.95,"5":0.95,"6":0.93,"7":0.9,"8":1.0,"9":1.28 };
+  return table[d] || 1.0;
+}
+function regionLabel(zip){
+  const d = (zip || "").trim()[0];
+  const names = {"0":"Northeast (NY/NJ/PR)","1":"Northeast","2":"Mid‑Atlantic","3":"Southeast","4":"Southeast/KY","5":"Midwest","6":"Central","7":"South Central","8":"Mountain West","9":"West Coast"};
+  return names[d] ? `${names[d]} index ×${regionIndex(zip).toFixed(2)}` : "National average index ×1.00";
+}
+
+const sel = document.getElementById('projectType');
+Object.entries(PROJECTS).forEach(([key,p])=>{
+  const opt = document.createElement('option');
+  opt.value = key; opt.textContent = p.label;
+  sel.appendChild(opt);
+});
+sel.value = "kitchen";
+
+let tier = 1;
+document.querySelectorAll('.tier-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tier-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    tier = parseFloat(btn.dataset.tier);
+    render();
+  });
+});
+
+const fmt = n => "$" + Math.round(n).toLocaleString('en-US');
+
+function render(){
+  const key = sel.value;
+  const p = PROJECTS[key];
+  const qty = parseFloat(document.getElementById('qty').value) || 0;
+  const zip = document.getElementById('zip').value;
+  const region = regionIndex(zip);
+
+  document.getElementById('qtyLabel').textContent = p.unitLabel;
+  document.getElementById('regionHint').textContent = `Regional cost index applied: ${regionLabel(zip)}. Rough approximation — always confirm with local bids.`;
+  document.getElementById('ledgerTitle').textContent = p.label;
+  document.getElementById('ledgerZip').textContent = zip || "—";
+  document.getElementById('ledgerTier').textContent = tier===0.75 ? "ECONOMY" : tier===1.5 ? "PREMIUM" : "STANDARD";
+
+  const low = p.low * qty * tier * region;
+  const high = p.high * qty * tier * region;
+  const permitLow = low * 0.03, permitHigh = high * 0.05;
+  const contLow = low * 0.12, contHigh = high * 0.12;
+  const totalLow = low + permitLow + contLow;
+  const totalHigh = high + permitHigh + contHigh;
+
+  document.getElementById('lowVal').textContent = fmt(low);
+  document.getElementById('highVal').textContent = fmt(high);
+  document.getElementById('permitVal').textContent = `${fmt(permitLow)} – ${fmt(permitHigh)}`;
+  document.getElementById('contVal').textContent = `${fmt(contLow)} – ${fmt(contHigh)}`;
+  document.getElementById('totalVal').textContent = `${fmt(totalLow)} – ${fmt(totalHigh)}`;
+}
+
+['projectType','qty','zip'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+  document.getElementById(id).addEventListener('change', render);
+});
+
+render();
+</script>
+</body>
+</html>
