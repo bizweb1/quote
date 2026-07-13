@@ -426,30 +426,87 @@
   }
   .pdf-btn:hover{ background:#123a5c; }
   .pdf-btn:disabled{ opacity:.5; cursor:default; }
+
+  /* Win probability ring (green->orange->red via inline style) */
+  .win-prob{ margin-top:-6px; margin-bottom:16px; }
+  .ring.win{
+    background:conic-gradient(var(--hivis) 0deg, var(--hivis) calc(var(--pct,0) * 3.6deg), #D9D2BC calc(var(--pct,0) * 3.6deg));
+  }
+  .ring.win::after{ background:#EAE6D8; }
+
+  /* Payment schedule */
+  .pay-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; color:#3a3227; padding:7px 0; border-bottom:1px dotted #d9d2bc;
+  }
+  .pay-row .pay-pct{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; background:var(--ink); color:#EAE6D8;
+    padding:2px 6px; border-radius:2px; margin-right:8px; flex-shrink:0;
+  }
+  .pay-row .pay-label{ flex:1; }
+  .pay-row .pay-amt{ font-family:'IBM Plex Mono', monospace; font-weight:500; flex-shrink:0; }
+
+  /* AI Proposal Generator */
+  .proposal-block{
+    margin-top:22px; padding:16px; background:rgba(14,47,77,.04);
+    border:1px solid #C9C2A8; border-radius:4px;
+  }
+  .proposal-block select{
+    width:100%; margin-top:6px; margin-bottom:10px;
+    background:#fff; border:1px solid #C9C2A8; color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif; font-size:14px; padding:9px 10px; border-radius:3px;
+  }
+  .proposal-btn{
+    width:100%;
+    background:linear-gradient(135deg, var(--hivis), #C24A1D); color:#fff; border:none;
+    border-radius:4px; padding:14px 20px; font-family:'Big Shoulders Display', sans-serif;
+    font-weight:700; font-size:16px; letter-spacing:.03em; text-transform:uppercase;
+    cursor:pointer;
+  }
+  .proposal-btn:hover{ filter:brightness(1.08); }
+  .proposal-btn:disabled{ opacity:.5; cursor:default; }
+
+  /* Language toggle */
+  .lang-toggle{
+    position:fixed; top:14px; right:14px; z-index:50;
+    display:flex; border:1px solid rgba(110,198,224,.5); border-radius:4px; overflow:hidden;
+    background:var(--blueprint-deep);
+  }
+  .lang-opt{
+    padding:7px 12px; font-family:'IBM Plex Mono', monospace; font-size:12px; font-weight:600;
+    letter-spacing:.06em; color:var(--steel); cursor:pointer;
+  }
+  .lang-opt.active{ background:var(--hivis); color:#fff; }
+  @media (max-width:600px){ .lang-toggle{ top:10px; right:10px; } }
 </style>
 </head>
 <body>
 
+<div class="lang-toggle" id="langToggle">
+  <div class="lang-opt active" data-lang="en">EN</div>
+  <div class="lang-opt" data-lang="es">ES</div>
+</div>
+
 <header>
   <div class="wordmark">True<span>Square</span></div>
-  <div class="eyebrow">Job Ticket · Instant Estimate</div>
-  <h1>What's it<br><span>actually</span> gonna cost?</h1>
-  <p class="subhead">Fill in the ticket. Watch the ledger update. <strong>No account, no phone number, no 7‑day trial required</strong> to see a number.</p>
+  <div class="eyebrow" data-i18n="eyebrow">Job Ticket · Instant Estimate</div>
+  <h1 data-i18n-html="h1">What's it<br><span>actually</span> gonna cost?</h1>
+  <p class="subhead" data-i18n-html="subhead">Fill in the ticket. Watch the ledger update. <strong>No account, no phone number, no 7‑day trial required</strong> to see a number.</p>
 </header>
 
 <main>
   <section class="panel">
-    <div class="panel-title">Work Order <span>#001</span></div>
+    <div class="panel-title"><span data-i18n="workOrder">Work Order</span> <span>#001</span></div>
 
     <div class="mode-toggle" id="modeToggle">
-      <div class="mode-opt active" data-mode="homeowner">Homeowner</div>
-      <div class="mode-opt" data-mode="contractor">Contractor</div>
+      <div class="mode-opt active" data-mode="homeowner" data-i18n="homeowner">Homeowner</div>
+      <div class="mode-opt" data-mode="contractor" data-i18n="contractor">Contractor</div>
     </div>
 
-    <label for="jobName">Job name</label>
-    <input type="text" id="jobName" placeholder="e.g. Smith Kitchen">
+    <label for="jobName" data-i18n="jobName">Job name</label>
+    <input type="text" id="jobName" placeholder="e.g. Smith Kitchen" data-i18n-ph="jobNamePh">
 
-    <label for="projectType">Project type</label>
+    <label for="projectType" data-i18n="projectType">Project type</label>
     <select id="projectType"></select>
 
     <div class="row">
@@ -458,93 +515,93 @@
         <input type="number" id="qty" min="0" value="200">
       </div>
       <div>
-        <label for="zip">Zip code</label>
+        <label for="zip" data-i18n="zipCode">Zip code</label>
         <input type="text" id="zip" maxlength="5" placeholder="e.g. 94066" value="94066">
       </div>
     </div>
     <p class="hint" id="regionHint">Regional cost index applied automatically. Rough approximation — always confirm with local bids.</p>
 
-    <label>Finish tier</label>
+    <label data-i18n="finishTier">Finish tier</label>
     <div class="tier-group" id="tierGroup">
-      <div class="tier-btn" data-tier="0.75">Economy</div>
-      <div class="tier-btn active" data-tier="1">Standard</div>
-      <div class="tier-btn" data-tier="1.5">Premium</div>
+      <div class="tier-btn" data-tier="0.75" data-i18n="tierEconomy">Economy</div>
+      <div class="tier-btn active" data-tier="1" data-i18n="tierStandard">Standard</div>
+      <div class="tier-btn" data-tier="1.5" data-i18n="tierPremium">Premium</div>
     </div>
 
-    <label for="notes">Notes (optional, doesn't affect price yet)</label>
-    <input type="text" id="notes" placeholder="e.g. tight access, HOA permit needed">
+    <label for="notes" data-i18n="notesLabel">Notes (optional, doesn't affect price yet)</label>
+    <input type="text" id="notes" placeholder="e.g. tight access, HOA permit needed" data-i18n-ph="notesPh">
 
     <div class="gauges">
       <div class="gauge-row">
-        <div class="gauge-label">Cost tier</div>
+        <div class="gauge-label" data-i18n="costTierLabel">Cost tier</div>
         <div class="gauge-track"><div class="gauge-fill" id="costGauge"></div></div>
         <div class="gauge-tag" id="costTag">STD</div>
       </div>
       <div class="gauge-row">
-        <div class="gauge-label">Difficulty</div>
+        <div class="gauge-label" data-i18n="difficultyLabel">Difficulty</div>
         <div class="gauge-track"><div class="gauge-fill good" id="diffGauge"></div></div>
         <div class="gauge-tag" id="diffTag">—</div>
       </div>
     </div>
 
     <div class="contractor-fields" id="contractorFields">
-      <div class="section-tag" style="color:var(--line-cyan); border-color:rgba(110,198,224,.4);">Profit calculator</div>
+      <div class="section-tag" style="color:var(--line-cyan); border-color:rgba(110,198,224,.4);" data-i18n="profitCalc">Profit calculator</div>
       <div class="row">
         <div>
-          <label for="profitPct">Desired profit %</label>
+          <label for="profitPct" data-i18n="desiredProfit">Desired profit %</label>
           <input type="number" id="profitPct" min="0" max="80" value="25">
         </div>
         <div>
-          <label for="equipCost">Equipment ($)</label>
+          <label for="equipCost" data-i18n="equipment">Equipment ($)</label>
           <input type="number" id="equipCost" min="0" value="0">
         </div>
       </div>
-      <label for="travelCost">Travel / mobilization ($)</label>
+      <label for="travelCost" data-i18n="travel">Travel / mobilization ($)</label>
       <input type="number" id="travelCost" min="0" value="0">
     </div>
 
     <div class="photo-gallery">
-      <div class="photo-gallery-title">Recent <span id="photoGalleryLabel">Kitchens</span></div>
+      <div class="photo-gallery-title"><span data-i18n="recent">Recent</span> <span id="photoGalleryLabel">Kitchens</span></div>
       <div class="photo-grid" id="photoGrid"></div>
     </div>
 
     <div class="report-section">
-      <div class="report-title">Report Details (for PDF)</div>
+      <div class="report-title" data-i18n="reportDetails">Report Details (for PDF)</div>
 
-      <label for="companyName">Company name</label>
+      <label for="companyName" data-i18n="companyName">Company name</label>
       <input type="text" id="companyName" placeholder="e.g. Valor Media Group">
       <div class="row">
         <div>
-          <label for="companyPhone">Company phone</label>
+          <label for="companyPhone" data-i18n="companyPhone">Company phone</label>
           <input type="text" id="companyPhone" placeholder="(555) 555-5555">
         </div>
         <div>
-          <label for="companyEmail">Company email</label>
+          <label for="companyEmail" data-i18n="companyEmail">Company email</label>
           <input type="text" id="companyEmail" placeholder="hello@company.com">
         </div>
       </div>
-      <label for="companyLicense">License / insurance (optional)</label>
+      <label for="companyLicense" data-i18n="companyLicense">License / insurance (optional)</label>
       <input type="text" id="companyLicense" placeholder="e.g. Lic #123456, Bonded &amp; Insured">
-      <label>Logo</label>
+      <label data-i18n="logo">Logo</label>
       <div class="logo-row">
-        <div class="logo-preview" id="logoPreview">No logo</div>
+        <div class="logo-preview" id="logoPreview" data-i18n="noLogo">No logo</div>
         <input type="file" id="logoInput" accept="image/png,image/jpeg" style="display:none;">
-        <button type="button" class="file-btn" onclick="document.getElementById('logoInput').click()">Upload logo</button>
+        <button type="button" class="file-btn" onclick="document.getElementById('logoInput').click()" data-i18n="uploadLogo">Upload logo</button>
       </div>
 
-      <label for="customerName" style="margin-top:18px;">Customer name</label>
+      <label for="customerName" style="margin-top:18px;" data-i18n="customerName">Customer name</label>
       <input type="text" id="customerName" placeholder="e.g. John Smith">
       <div class="row">
         <div>
-          <label for="customerPhone">Customer phone</label>
+          <label for="customerPhone" data-i18n="customerPhone">Customer phone</label>
           <input type="text" id="customerPhone" placeholder="(555) 555-5555">
         </div>
         <div>
-          <label for="customerEmail">Customer email</label>
+          <label for="customerEmail" data-i18n="customerEmail">Customer email</label>
           <input type="text" id="customerEmail" placeholder="customer@email.com">
         </div>
       </div>
-      <label for="customerAddress">Project address</label>
+      <label for="customerAddress" data-i18n="projectAddress">Project address</label>
       <input type="text" id="customerAddress" placeholder="e.g. 58 San Carlos Ave, San Bruno CA">
     </div>
   </section>
@@ -553,23 +610,33 @@
     <div class="ledger">
       <div class="ledger-head">
         <div>
-          <div class="tag">Estimate Ledger</div>
+          <div class="tag" data-i18n="estimateLedger">Estimate Ledger</div>
           <h2 id="ledgerTitle">Kitchen Renovation</h2>
         </div>
         <div class="no">
-          ZIP <span id="ledgerZip">94066</span><br>
-          TIER <span id="ledgerTier">STANDARD</span>
+          <span data-i18n="zipShort">ZIP</span> <span id="ledgerZip">94066</span><br>
+          <span data-i18n="tierShort">TIER</span> <span id="ledgerTier">STANDARD</span>
         </div>
       </div>
 
       <div class="confidence">
         <div class="ring" id="confRing" data-pct="0" style="--pct:0;"></div>
         <div class="checks">
-          <b>Confidence: <span id="confPct">0</span>%</b>
-          <span id="chkZip">✔ ZIP code</span>
-          <span id="chkSize">✔ Project size</span>
-          <span id="chkDb">✔ National pricing database</span>
-          <span id="chkRegion">✔ Regional labor index</span>
+          <b><span data-i18n="confidence">Confidence</span>: <span id="confPct">0</span>%</b>
+          <span id="chkZip">✔ <span data-i18n="chkZip">ZIP code</span></span>
+          <span id="chkSize">✔ <span data-i18n="chkSize">Project size</span></span>
+          <span id="chkDb">✔ <span data-i18n="chkDb">National pricing database</span></span>
+          <span id="chkRegion">✔ <span data-i18n="chkRegion">Regional labor index</span></span>
+        </div>
+      </div>
+
+      <div class="confidence win-prob">
+        <div class="ring win" id="winRing" data-pct="0" style="--pct:0;"></div>
+        <div class="checks">
+          <b><span data-i18n="winProb">Win Probability</span>: <span id="winPct">0</span>%</b>
+          <span id="winFactor1">—</span>
+          <span id="winFactor2">—</span>
+          <span id="winFactor3">—</span>
         </div>
       </div>
 
@@ -578,46 +645,67 @@
       <div id="breakdownList"></div>
 
       <div class="totals">
-        <div class="line-item show"><span class="label">Permits &amp; fees (est.)</span><span class="fill"></span><span class="val" id="permitVal">$0</span></div>
-        <div class="line-item show"><span class="label">Contingency (12%)</span><span class="fill"></span><span class="val" id="contVal">$0</span></div>
+        <div class="line-item show"><span class="label" data-i18n="permits">Permits &amp; fees (est.)</span><span class="fill"></span><span class="val" id="permitVal">$0</span></div>
+        <div class="line-item show"><span class="label" data-i18n="contingency">Contingency (12%)</span><span class="fill"></span><span class="val" id="contVal">$0</span></div>
         <div class="grand">
-          <span class="lbl">Total range</span>
+          <span class="lbl" data-i18n="totalRange">Total range</span>
           <span class="amt" id="totalVal">$0 – $0</span>
         </div>
       </div>
 
-      <button class="drivers-btn" id="driversBtn" onclick="explainDrivers()">Why is this priced this way? (AI)</button>
+      <button class="drivers-btn" id="driversBtn" onclick="explainDrivers()" data-i18n="whyPriced">Why is this priced this way? (AI)</button>
       <div class="drivers-status" id="driversStatus"></div>
       <ul class="drivers-list" id="driversList"></ul>
 
       <div id="bidTiersWrap" class="contractor-fields">
-        <div class="section-tag">Recommended bid</div>
+        <div class="section-tag" data-i18n="recoBid">Recommended bid</div>
         <div class="bid-tiers">
-          <div class="bid-tier"><div class="bt-name">Minimum</div><div class="bt-amt" id="bidMin">$0</div></div>
-          <div class="bid-tier reco"><div class="bt-name">Recommended</div><div class="bt-amt" id="bidReco">$0</div></div>
-          <div class="bid-tier"><div class="bt-name">Premium</div><div class="bt-amt" id="bidPremium">$0</div></div>
+          <div class="bid-tier"><div class="bt-name" data-i18n="minimum">Minimum</div><div class="bt-amt" id="bidMin">$0</div></div>
+          <div class="bid-tier reco"><div class="bt-name" data-i18n="recommended">Recommended</div><div class="bt-amt" id="bidReco">$0</div></div>
+          <div class="bid-tier"><div class="bt-name" data-i18n="premium">Premium</div><div class="bt-amt" id="bidPremium">$0</div></div>
         </div>
       </div>
 
-      <div class="section-tag">Estimated timeline</div>
+      <div class="section-tag" data-i18n="estTimeline">Estimated timeline</div>
       <div class="timeline" id="timelineRow"></div>
       <div class="tl-total" id="timelineTotal"></div>
 
+      <div class="section-tag" data-i18n="paySchedule">Payment schedule</div>
+      <div id="paymentScheduleList"></div>
+
       <div class="scope-head">
-        <div class="section-tag" style="margin:0; border:none; padding:0;">Scope of work</div>
+        <div class="section-tag" style="margin:0; border:none; padding:0;" data-i18n="scopeOfWork">Scope of work</div>
         <span class="pro-badge">PRO</span>
       </div>
-      <button class="scope-btn" id="scopeBtn" onclick="generateScope()">Generate scope of work (AI)</button>
+      <button class="scope-btn" id="scopeBtn" onclick="generateScope()" data-i18n="genScope">Generate scope of work (AI)</button>
       <div class="scope-status" id="scopeStatus"></div>
       <ul class="scope-list" id="scopeList"></ul>
 
-      <p class="callout">This is a ballpark from typical national price ranges plus a regional index — not a bid. Actual pricing depends on scope, condition, access, and local labor rates. Get 2–3 contractor quotes before committing.</p>
+      <p class="callout" data-i18n="disclaimer">This is a ballpark from typical national price ranges plus a regional index — not a bid. Actual pricing depends on scope, condition, access, and local labor rates. Get 2–3 contractor quotes before committing.</p>
 
       <div class="save-row">
-        <button class="save-btn" id="saveBtn" onclick="saveJob()">💾 Save Project</button>
+        <button class="save-btn" id="saveBtn" onclick="saveJob()" data-i18n="saveProject">💾 Save Project</button>
         <span class="save-status" id="saveStatus"></span>
       </div>
-      <button class="pdf-btn" id="pdfBtn" onclick="downloadPDF()">📄 Download PDF Report</button>
+      <button class="pdf-btn" id="pdfBtn" onclick="downloadPDF()" data-i18n="downloadPdf">📄 Download PDF Report</button>
+
+      <div class="proposal-block">
+        <div class="scope-head">
+          <div class="section-tag" style="margin:0; border:none; padding:0;" data-i18n="proposalGen">AI Proposal Generator</div>
+          <span class="pro-badge">PRO</span>
+        </div>
+        <label for="proposalTheme" data-i18n="theme">Theme</label>
+        <select id="proposalTheme">
+          <option value="modern" data-i18n="themeModern">Modern</option>
+          <option value="luxury" data-i18n="themeLuxury">Luxury</option>
+          <option value="blueprints" data-i18n="themeBlueprints">Blueprints</option>
+          <option value="minimal" data-i18n="themeMinimal">Minimal</option>
+          <option value="industrial" data-i18n="themeIndustrial">Industrial</option>
+        </select>
+        <button class="proposal-btn" id="proposalBtn" onclick="generateProposal()" data-i18n="genProposal">✨ Generate Proposal</button>
+        <div class="scope-status" id="proposalStatus"></div>
+      </div>
+
       <div id="configNote"></div>
     </div>
   </section>
@@ -625,12 +713,12 @@
 
 <section class="jobs-panel">
   <div class="panel" style="background:none; border:none; padding:0;">
-    <div class="panel-title" style="margin-bottom:12px;">Saved Jobs <span id="jobsCount">0</span></div>
-    <div class="jobs-list" id="jobsList"><span class="jobs-empty">No jobs saved yet — connect Supabase and hit "Save this job."</span></div>
+    <div class="panel-title" style="margin-bottom:12px;"><span data-i18n="savedJobs">Saved Jobs</span> <span id="jobsCount">0</span></div>
+    <div class="jobs-list" id="jobsList"><span class="jobs-empty" data-i18n="noJobsYet">No jobs saved yet — connect Supabase and hit "Save this job."</span></div>
   </div>
 </section>
 
-<p class="no-gate">Try every project type. Change the zip. No login wall — that's the whole point.</p>
+<p class="no-gate" data-i18n="noGate">Try every project type. Change the zip. No login wall — that's the whole point.</p>
 
 <script>
 const PROJECTS = {
@@ -677,6 +765,167 @@ const PROJECTS = {
     breakdown:[["Interior demo",.40],["Debris removal & hauling",.35],["Disposal fees",.15],["Cleanup",.10]],
     timeline:{planning:[0,1],construction:[1,2],inspection:[0,1]} },
 };
+
+// ---- Language (EN/ES) ----
+let LANG = 'en';
+
+const I18N = {
+  en: {
+    eyebrow:"Job Ticket · Instant Estimate",
+    h1:'What\'s it<br><span>actually</span> gonna cost?',
+    subhead:'Fill in the ticket. Watch the ledger update. <strong>No account, no phone number, no 7‑day trial required</strong> to see a number.',
+    workOrder:"Work Order", homeowner:"Homeowner", contractor:"Contractor",
+    jobName:"Job name", jobNamePh:"e.g. Smith Kitchen", projectType:"Project type",
+    zipCode:"Zip code", finishTier:"Finish tier",
+    tierEconomy:"Economy", tierStandard:"Standard", tierPremium:"Premium",
+    notesLabel:"Notes (optional, doesn't affect price yet)", notesPh:"e.g. tight access, HOA permit needed",
+    costTierLabel:"Cost tier", difficultyLabel:"Difficulty",
+    profitCalc:"Profit calculator", desiredProfit:"Desired profit %", equipment:"Equipment ($)", travel:"Travel / mobilization ($)",
+    recent:"Recent", reportDetails:"Report Details (for PDF)",
+    companyName:"Company name", companyPhone:"Company phone", companyEmail:"Company email",
+    companyLicense:"License / insurance (optional)", logo:"Logo", noLogo:"No logo", uploadLogo:"Upload logo",
+    customerName:"Customer name", customerPhone:"Customer phone", customerEmail:"Customer email", projectAddress:"Project address",
+    estimateLedger:"Estimate Ledger", zipShort:"ZIP", tierShort:"TIER",
+    confidence:"Confidence", chkZip:"ZIP code", chkSize:"Project size", chkDb:"National pricing database", chkRegion:"Regional labor index",
+    winProb:"Win Probability",
+    permits:"Permits & fees (est.)", contingency:"Contingency (12%)", totalRange:"Total range",
+    whyPriced:"Why is this priced this way? (AI)",
+    recoBid:"Recommended bid", minimum:"Minimum", recommended:"Recommended", premium:"Premium",
+    estTimeline:"Estimated timeline", paySchedule:"Payment schedule",
+    scopeOfWork:"Scope of work", genScope:"Generate scope of work (AI)",
+    disclaimer:"This is a ballpark from typical national price ranges plus a regional index — not a bid. Actual pricing depends on scope, condition, access, and local labor rates. Get 2–3 contractor quotes before committing.",
+    saveProject:"💾 Save Project", downloadPdf:"📄 Download PDF Report",
+    proposalGen:"AI Proposal Generator", theme:"Theme",
+    themeModern:"Modern", themeLuxury:"Luxury", themeBlueprints:"Blueprints", themeMinimal:"Minimal", themeIndustrial:"Industrial",
+    genProposal:"✨ Generate Proposal",
+    savedJobs:"Saved Jobs", noJobsYet:'No jobs saved yet — connect Supabase and hit "Save this job."',
+    noGate:"Try every project type. Change the zip. No login wall — that's the whole point.",
+    peakSeason:"Peak season", shoulderSeason:"Shoulder season", slowSeason:"Slow season",
+    highCostMarket:"High-cost market", lowCostMarket:"Lower-cost market", avgMarket:"Average market",
+    economyPricing:"Economy pricing", standardPricing:"Standard pricing", premiumPricing:"Premium pricing"
+  },
+  es: {
+    eyebrow:"Orden de Trabajo · Cotización Instantánea",
+    h1:'¿Cuánto va<br><span>realmente</span> a costar?',
+    subhead:'Completa la orden. Mira cómo se actualiza el resumen. <strong>Sin cuenta, sin número de teléfono, sin prueba de 7 días</strong> para ver un número.',
+    workOrder:"Orden de Trabajo", homeowner:"Propietario", contractor:"Contratista",
+    jobName:"Nombre del proyecto", jobNamePh:"ej. Cocina de Smith", projectType:"Tipo de proyecto",
+    zipCode:"Código postal", finishTier:"Nivel de acabado",
+    tierEconomy:"Económico", tierStandard:"Estándar", tierPremium:"Premium",
+    notesLabel:"Notas (opcional, no afecta el precio aún)", notesPh:"ej. acceso limitado, se requiere permiso de HOA",
+    costTierLabel:"Nivel de costo", difficultyLabel:"Dificultad",
+    profitCalc:"Calculadora de ganancias", desiredProfit:"Ganancia deseada %", equipment:"Equipo ($)", travel:"Viaje / movilización ($)",
+    recent:"Recientes", reportDetails:"Detalles del informe (para PDF)",
+    companyName:"Nombre de la empresa", companyPhone:"Teléfono de la empresa", companyEmail:"Correo de la empresa",
+    companyLicense:"Licencia / seguro (opcional)", logo:"Logotipo", noLogo:"Sin logotipo", uploadLogo:"Subir logotipo",
+    customerName:"Nombre del cliente", customerPhone:"Teléfono del cliente", customerEmail:"Correo del cliente", projectAddress:"Dirección del proyecto",
+    estimateLedger:"Resumen de Cotización", zipShort:"C.P.", tierShort:"NIVEL",
+    confidence:"Confianza", chkZip:"Código postal", chkSize:"Tamaño del proyecto", chkDb:"Base de datos nacional de precios", chkRegion:"Índice laboral regional",
+    winProb:"Probabilidad de Ganar",
+    permits:"Permisos y tarifas (est.)", contingency:"Contingencia (12%)", totalRange:"Rango total",
+    whyPriced:"¿Por qué este precio? (IA)",
+    recoBid:"Oferta recomendada", minimum:"Mínimo", recommended:"Recomendado", premium:"Premium",
+    estTimeline:"Cronograma estimado", paySchedule:"Calendario de pagos",
+    scopeOfWork:"Alcance del trabajo", genScope:"Generar alcance del trabajo (IA)",
+    disclaimer:"Este es un cálculo aproximado basado en rangos de precios nacionales típicos más un índice regional — no es una oferta firme. El precio real depende del alcance, condición, acceso y tarifas laborales locales. Obtén 2–3 cotizaciones de contratistas antes de decidir.",
+    saveProject:"💾 Guardar Proyecto", downloadPdf:"📄 Descargar Informe PDF",
+    proposalGen:"Generador de Propuestas con IA", theme:"Tema",
+    themeModern:"Moderno", themeLuxury:"Lujo", themeBlueprints:"Planos", themeMinimal:"Minimalista", themeIndustrial:"Industrial",
+    genProposal:"✨ Generar Propuesta",
+    savedJobs:"Proyectos Guardados", noJobsYet:'Aún no hay proyectos guardados — conecta Supabase y presiona "Guardar Proyecto".',
+    noGate:"Prueba cada tipo de proyecto. Cambia el código postal. Sin muro de acceso — ese es el punto.",
+    peakSeason:"Temporada alta", shoulderSeason:"Temporada media", slowSeason:"Temporada baja",
+    highCostMarket:"Mercado de alto costo", lowCostMarket:"Mercado de bajo costo", avgMarket:"Mercado promedio",
+    economyPricing:"Precio económico", standardPricing:"Precio estándar", premiumPricing:"Precio premium"
+  }
+};
+
+const PROJECT_LABEL_ES = {
+  "Kitchen Renovation":"Renovación de Cocina", "Bathroom Renovation":"Renovación de Baño",
+  "Roofing":"Techado", "Siding":"Revestimiento Exterior",
+  "Interior/Exterior Painting":"Pintura Interior/Exterior", "Flooring Installation":"Instalación de Piso",
+  "Plumbing Work":"Trabajo de Plomería", "Fencing":"Cercado", "Decking":"Terraza",
+  "General Remodeling":"Remodelación General", "New Construction":"Construcción Nueva",
+  "ADU — Attached":"ADU — Adosada", "ADU — Detached":"ADU — Independiente",
+  "Demolition & Cleanup":"Demolición y Limpieza"
+};
+const UNIT_LABEL_ES = {
+  "Kitchen area (sq ft)":"Área de cocina (pies²)", "Bathroom area (sq ft)":"Área de baño (pies²)",
+  "Roof area (sq ft)":"Área de techo (pies²)", "Exterior wall area (sq ft)":"Área de pared exterior (pies²)",
+  "Floor area to paint (sq ft)":"Área de piso a pintar (pies²)", "Floor area (sq ft)":"Área de piso (pies²)",
+  "Number of fixtures":"Número de accesorios", "Fence length (linear ft)":"Longitud de cerca (pies lineales)",
+  "Deck area (sq ft)":"Área de terraza (pies²)", "Renovated area (sq ft)":"Área renovada (pies²)",
+  "Building footprint (sq ft)":"Huella del edificio (pies²)", "ADU floor area (sq ft)":"Área de ADU (pies²)",
+  "Area to clear (sq ft)":"Área a despejar (pies²)"
+};
+const PHOTO_LABEL_ES = {
+  Kitchens:"Cocinas", Bathrooms:"Baños", Roofs:"Techos", "Siding Jobs":"Revestimientos",
+  "Paint Jobs":"Trabajos de Pintura", Floors:"Pisos", "Plumbing Jobs":"Trabajos de Plomería",
+  Fences:"Cercas", Decks:"Terrazas", Remodels:"Remodelaciones", "New Builds":"Construcciones Nuevas",
+  "Attached ADUs":"ADUs Adosadas", "Detached ADUs":"ADUs Independientes", "Demo Jobs":"Trabajos de Demolición"
+};
+const DIFF_ES = { Low:"Baja", Medium:"Media", High:"Alta" };
+const TIMELINE_NAME_ES = { Planning:"Planificación", Construction:"Construcción", Inspections:"Inspecciones" };
+function trTimelineName(name){ return LANG==='es' && TIMELINE_NAME_ES[name] ? TIMELINE_NAME_ES[name] : name; }
+const BREAKDOWN_ES = {
+  "Demolition":"Demolición", "Cabinetry":"Gabinetes", "Countertops":"Encimeras", "Appliances":"Electrodomésticos",
+  "Plumbing":"Plomería", "Electrical":"Eléctrico", "Flooring":"Piso", "Painting":"Pintura", "Cleanup":"Limpieza",
+  "Tile":"Azulejo", "Vanity & Fixtures":"Tocador y Accesorios", "Shower / Tub":"Ducha / Tina",
+  "Tear-off & disposal":"Retiro y desecho", "Underlayment":"Base / entretecho", "Roofing material":"Material de techo",
+  "Flashing & vents":"Tapajuntas y ventilación", "Install labor":"Mano de obra de instalación",
+  "Removal":"Retiro", "Siding material":"Material de revestimiento", "House wrap / insulation":"Envoltura de casa / aislamiento",
+  "Trim & flashing":"Molduras y tapajuntas", "Prep & patching":"Preparación y parcheo", "Primer":"Imprimación",
+  "Paint material":"Material de pintura", "Application labor":"Mano de obra de aplicación",
+  "Demo / removal":"Demolición / retiro", "Subfloor prep":"Preparación de subsuelo", "Flooring material":"Material de piso",
+  "Fixtures":"Accesorios", "Piping & fittings":"Tuberías y conexiones", "Labor":"Mano de obra",
+  "Permits & inspection":"Permisos e inspección", "Posts & concrete":"Postes y concreto", "Fencing material":"Material de cerca",
+  "Gates & hardware":"Portones y herrajes", "Framing / substructure":"Estructura / subestructura",
+  "Decking material":"Material de terraza", "Railings":"Barandales", "Framing":"Estructura",
+  "Drywall & paint":"Tablaroca y pintura", "Fixtures & finishes":"Accesorios y acabados", "Foundation":"Cimentación",
+  "Electrical & plumbing rough-in":"Instalación eléctrica y plomería (obra gris)", "Insulation & drywall":"Aislamiento y tablaroca",
+  "Interior finishes":"Acabados interiores", "Exterior finishes":"Acabados exteriores",
+  "Foundation / tie-in framing":"Cimentación / conexión estructural", "Electrical & plumbing":"Eléctrico y plomería",
+  "Kitchen / bath fixtures":"Accesorios de cocina / baño", "Framing & roofing":"Estructura y techado",
+  "Utility hookups":"Conexiones de servicios", "Interior demo":"Demolición interior",
+  "Debris removal & hauling":"Retiro y transporte de escombros", "Disposal fees":"Tarifas de desecho"
+};
+function trBreakdown(label){ return LANG==='es' && BREAKDOWN_ES[label] ? BREAKDOWN_ES[label] : label; }
+function trPayLabel(label){
+  if(LANG!=='es') return label;
+  if(label === "Deposit (contract signing)") return "Depósito (firma del contrato)";
+  if(label === "Final inspection & walkthrough") return "Inspección final y recorrido";
+  if(label === "Mobilization complete") return "Movilización completa";
+  const m = label.match(/^(.*) (complete|installed)$/);
+  if(m){ return `${trBreakdown(m[1])} ${m[2]==='complete'?'completo':'instalado'}`; }
+  return label;
+}
+
+function applyLanguage(){
+  const dict = I18N[LANG];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-html');
+    if(dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if(dict[key] !== undefined) el.placeholder = dict[key];
+  });
+  document.documentElement.lang = LANG;
+  if(typeof render === 'function' && sel && sel.value) render();
+}
+
+document.getElementById('langToggle').querySelectorAll('.lang-opt').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('.lang-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    LANG = opt.dataset.lang;
+    applyLanguage();
+  });
+});
 
 function regionIndex(zip){
   const d = (zip || "").trim()[0];
@@ -800,21 +1049,27 @@ function render(){
   const zipValid = isValidZip(zip);
   const qtyValid = qty > 0;
 
-  document.getElementById('qtyLabel').textContent = p.unitLabel;
-  document.getElementById('regionHint').textContent = `Regional cost index applied: ${regionLabel(zip)}. Rough approximation — always confirm with local bids.`;
-  document.getElementById('ledgerTitle').textContent = p.label;
+  const trProject = LANG==='es' && PROJECT_LABEL_ES[p.label] ? PROJECT_LABEL_ES[p.label] : p.label;
+  const trUnit = LANG==='es' && UNIT_LABEL_ES[p.unitLabel] ? UNIT_LABEL_ES[p.unitLabel] : p.unitLabel;
+
+  document.getElementById('qtyLabel').textContent = trUnit;
+  document.getElementById('regionHint').textContent = LANG==='es'
+    ? `Índice de costo regional aplicado: ${regionLabel(zip)}. Aproximación general — siempre confirma con cotizaciones locales.`
+    : `Regional cost index applied: ${regionLabel(zip)}. Rough approximation — always confirm with local bids.`;
+  document.getElementById('ledgerTitle').textContent = trProject;
   document.getElementById('ledgerZip').textContent = zip || "—";
-  document.getElementById('ledgerTier').textContent = tier===0.75 ? "ECONOMY" : tier===1.5 ? "PREMIUM" : "STANDARD";
+  document.getElementById('ledgerTier').textContent = (tier===0.75 ? I18N[LANG].tierEconomy : tier===1.5 ? I18N[LANG].tierPremium : I18N[LANG].tierStandard).toUpperCase();
 
   // Photo gallery
-  document.getElementById('photoGalleryLabel').textContent = PHOTO_LABELS[key] || p.label;
+  const photoLabel = PHOTO_LABELS[key] || p.label;
+  document.getElementById('photoGalleryLabel').textContent = LANG==='es' && PHOTO_LABEL_ES[photoLabel] ? PHOTO_LABEL_ES[photoLabel] : photoLabel;
   const photoGrid = document.getElementById('photoGrid');
   photoGrid.innerHTML = '';
   const kw = PHOTO_KEYWORDS[key] || "construction,renovation";
   for(let i=0;i<3;i++){
     const img = document.createElement('img');
     img.loading = 'lazy';
-    img.alt = `${p.label} example`;
+    img.alt = `${trProject} example`;
     img.src = `https://source.unsplash.com/240x180/?${kw}&sig=${key}${i}`;
     img.onerror = () => { img.style.display = 'none'; };
     photoGrid.appendChild(img);
@@ -839,12 +1094,12 @@ function render(){
   document.getElementById('chkRegion').className = checks.region ? '' : 'off';
 
   const costPct = tier===0.75 ? 33 : tier===1.5 ? 100 : 66;
-  const costTag = tier===0.75 ? "LOW" : tier===1.5 ? "HIGH" : "STD";
+  const costTag = LANG==='es' ? (tier===0.75?"BAJO":tier===1.5?"ALTO":"ESTD") : (tier===0.75 ? "LOW" : tier===1.5 ? "HIGH" : "STD");
   document.getElementById('costGauge').style.width = costPct + "%";
   document.getElementById('costTag').textContent = costTag;
   const diffMap = {Low:33, Medium:66, High:100};
   document.getElementById('diffGauge').style.width = diffMap[p.difficulty] + "%";
-  document.getElementById('diffTag').textContent = p.difficulty.toUpperCase();
+  document.getElementById('diffTag').textContent = (LANG==='es' ? DIFF_ES[p.difficulty] : p.difficulty).toUpperCase();
 
   const tlRow = document.getElementById('timelineRow');
   tlRow.innerHTML = '';
@@ -854,11 +1109,50 @@ function render(){
     totalMin += range[0]; totalMax += range[1];
     const div = document.createElement('div');
     div.className = 'tl-step';
-    const weeksText = range[0]===0 && range[1]===0 ? "—" : (range[0]===range[1] ? `${range[0]} wk` : `${range[0]}–${range[1]} wk`);
-    div.innerHTML = `<div class="tl-name">${name}</div><div class="tl-weeks">${weeksText}</div>`;
+    const wkWord = LANG==='es' ? 'sem' : 'wk';
+    const weeksText = range[0]===0 && range[1]===0 ? "—" : (range[0]===range[1] ? `${range[0]} ${wkWord}` : `${range[0]}–${range[1]} ${wkWord}`);
+    const dispName = trTimelineName(name);
+    div.innerHTML = `<div class="tl-name">${dispName}</div><div class="tl-weeks">${weeksText}</div>`;
     tlRow.appendChild(div);
   });
-  document.getElementById('timelineTotal').textContent = `Total: ${totalMin}–${totalMax} weeks`;
+  document.getElementById('timelineTotal').textContent = LANG==='es'
+    ? `Total: ${totalMin}–${totalMax} semanas`
+    : `Total: ${totalMin}–${totalMax} weeks`;
+
+  // ---- Win probability (heuristic) ----
+  const month = new Date().getMonth(); // 0=Jan
+  const seasonAdj = (month>=2 && month<=7) ? 8 : (month>=8 && month<=10) ? 0 : -8;
+  const seasonKey = (month>=2 && month<=7) ? "peakSeason" : (month>=8 && month<=10) ? "shoulderSeason" : "slowSeason";
+  const tierAdj = tier===0.75 ? 15 : tier===1.5 ? -10 : 5;
+  const regionAdj = region >= 1.15 ? -5 : region <= 0.95 ? 5 : 0;
+  const winPct = Math.max(15, Math.min(92, Math.round(55 + seasonAdj + tierAdj + regionAdj)));
+  document.getElementById('winPct').textContent = winPct;
+  const winRing = document.getElementById('winRing');
+  winRing.style.setProperty('--pct', winPct);
+  winRing.setAttribute('data-pct', winPct);
+  const pricingKey = tier===0.75?"economyPricing":tier===1.5?"premiumPricing":"standardPricing";
+  const marketKey = region >= 1.15 ? "highCostMarket" : region <= 0.95 ? "lowCostMarket" : "avgMarket";
+  document.getElementById('winFactor1').textContent = I18N[LANG][pricingKey];
+  document.getElementById('winFactor2').textContent = I18N[LANG][seasonKey];
+  document.getElementById('winFactor3').textContent = I18N[LANG][marketKey];
+  const seasonLabel = I18N.en[seasonKey];
+
+  // ---- Payment schedule ----
+  const breakdownRowsTmp = p.breakdown.map(([label,weight])=>({ label, amount: ((low+high)/2)*weight }));
+  const sortedByAmt = [...breakdownRowsTmp].sort((a,b)=>b.amount-a.amount);
+  const demoItem = breakdownRowsTmp.find(r => /demo|removal|tear-off/i.test(r.label));
+  const topItem = sortedByAmt.find(r => !/demo|removal|tear-off|cleanup|disposal/i.test(r.label)) || sortedByAmt[0];
+  const midpointTotal = (totalLow + totalHigh) / 2;
+  const paymentSchedule = [
+    { label: "Deposit (contract signing)", pct: 10 },
+    { label: `${demoItem ? demoItem.label : "Mobilization"} complete`, pct: 40 },
+    { label: `${topItem.label} installed`, pct: 40 },
+    { label: "Final inspection & walkthrough", pct: 10 }
+  ].map(m => ({ ...m, amount: midpointTotal * (m.pct/100) }));
+  const payEl = document.getElementById('paymentScheduleList');
+  payEl.innerHTML = paymentSchedule.map(m =>
+    `<div class="pay-row"><span class="pay-pct">${m.pct}%</span><span class="pay-label">${trPayLabel(m.label)}</span><span class="pay-amt">${fmt(m.amount)}</span></div>`
+  ).join('');
 
   // Contractor bid tiers
   if(contractorMode){
@@ -879,12 +1173,12 @@ function render(){
     totalLow, totalHigh, notes: document.getElementById('notes').value.trim(), scope: null,
     region, regionText: regionLabel(zip), difficulty: p.difficulty,
     topDrivers: [...p.breakdown].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([label,w])=>`${label} (${Math.round(w*100)}%)`),
-    breakdownRows: p.breakdown.map(([label,weight])=>({ label, amount: ((low+high)/2)*weight })),
+    breakdownRows: breakdownRowsTmp,
     permitLow, permitHigh, contLow, contHigh,
-    timelineSteps: steps.map(([name,range])=>({
-      name, text: range[0]===0 && range[1]===0 ? "—" : (range[0]===range[1] ? `${range[0]} wk` : `${range[0]}–${range[1]} wk`)
-    })),
-    timelineTotalText: `${totalMin}–${totalMax} weeks`
+    timelineSteps: steps.map(([name,range])=>({ name, lo: range[0], hi: range[1] })),
+    timelineTotalMin: totalMin, timelineTotalMax: totalMax,
+    paymentSchedule, winPct, seasonLabel,
+    proposalIntro: null, proposalWarranty: null
   };
   document.getElementById('scopeList').innerHTML = '';
   document.getElementById('scopeStatus').textContent = '';
@@ -892,7 +1186,9 @@ function render(){
   document.getElementById('driversStatus').textContent = '';
 
   const statusEl = document.getElementById('calcStatus');
-  const calcSteps = ["Calculating regional labor…", "Updating materials…", "Checking permits…", "Done ✓"];
+  const calcSteps = LANG==='es'
+    ? ["Calculando mano de obra regional…", "Actualizando materiales…", "Revisando permisos…", "Listo ✓"]
+    : ["Calculating regional labor…", "Updating materials…", "Checking permits…", "Done ✓"];
   let stepI = 0;
   statusEl.innerHTML = `<span class="dot"></span>${calcSteps[0]}`;
   const stepTimer = setInterval(()=>{
@@ -902,12 +1198,12 @@ function render(){
   }, 230);
 
   const listEl = document.getElementById('breakdownList');
-  listEl.innerHTML = '<div class="section-tag">Price breakdown</div>';
+  listEl.innerHTML = `<div class="section-tag">${LANG==='es' ? 'Desglose de precio' : 'Price breakdown'}</div>`;
   const rows = [];
   p.breakdown.forEach(([label, weight])=>{
     const row = document.createElement('div');
     row.className = 'line-item';
-    row.innerHTML = `<span class="label">${label}</span><span class="fill"></span><span class="val">$0</span>`;
+    row.innerHTML = `<span class="label">${trBreakdown(label)}</span><span class="fill"></span><span class="val">$0</span>`;
     listEl.appendChild(row);
     rows.push({el: row.querySelector('.val'), target: ((low+high)/2) * weight});
   });
@@ -941,16 +1237,17 @@ async function generateScope(){
   const listEl = document.getElementById('scopeList');
   btn.disabled = true;
   listEl.innerHTML = '';
-  statusEl.textContent = 'Generating scope of work…';
+  statusEl.textContent = LANG==='es' ? 'Generando alcance del trabajo…' : 'Generating scope of work…';
 
   const tierName = currentEstimate.tier===0.75 ? "economy" : currentEstimate.tier===1.5 ? "premium" : "standard";
+  const langLine = LANG==='es' ? "\nWrite every task in Spanish (natural Mexican Spanish, as spoken by contractors)." : "";
   const prompt = `You are a general contractor's estimator. Write a scope-of-work checklist for this job:
 Project: ${currentEstimate.projectLabel}
 Size: ${currentEstimate.qty} (${currentEstimate.unitLabel})
 Finish tier: ${tierName}
 Zip code: ${currentEstimate.zip || "not provided"}
 Notes: ${currentEstimate.notes || "none"}
-
+${langLine}
 Return ONLY a JSON array of 6-10 short task strings in the order work would happen. No markdown, no preamble, no explanation, no code fences — just the raw JSON array.`;
 
   try{
@@ -979,7 +1276,7 @@ Return ONLY a JSON array of 6-10 short task strings in the order work would happ
     currentEstimate.scope = tasks;
     statusEl.textContent = '';
   } catch(err){
-    statusEl.textContent = "Couldn't generate a scope of work — try again.";
+    statusEl.textContent = LANG==='es' ? "No se pudo generar el alcance del trabajo — intenta de nuevo." : "Couldn't generate a scope of work — try again.";
   } finally {
     btn.disabled = false;
   }
@@ -993,9 +1290,10 @@ async function explainDrivers(){
   const listEl = document.getElementById('driversList');
   btn.disabled = true;
   listEl.innerHTML = '';
-  statusEl.textContent = 'Analyzing…';
+  statusEl.textContent = LANG==='es' ? 'Analizando…' : 'Analyzing…';
 
   const tierName = currentEstimate.tier===0.75 ? "economy" : currentEstimate.tier===1.5 ? "premium" : "standard";
+  const langLine2 = LANG==='es' ? "\nWrite every sentence in Spanish (natural Mexican Spanish)." : "";
   const prompt = `You are a contractor's estimator explaining a price to a homeowner. Here's the job:
 Project: ${currentEstimate.projectLabel}
 Size: ${currentEstimate.qty} (${currentEstimate.unitLabel})
@@ -1004,8 +1302,8 @@ Difficulty: ${currentEstimate.difficulty}
 Regional cost factor: ${currentEstimate.regionText}
 Top cost drivers by category: ${currentEstimate.topDrivers.join(", ")}
 Total estimate: ${fmt(currentEstimate.totalLow)}–${fmt(currentEstimate.totalHigh)}
-
-Return ONLY a JSON array of 4-5 short plain-English sentences explaining what's driving this price, referencing the specific numbers above where relevant. No markdown, no preamble, no code fences — just the raw JSON array.`;
+${langLine2}
+Return ONLY a JSON array of 4-5 short plain sentences explaining what's driving this price, referencing the specific numbers above where relevant. No markdown, no preamble, no code fences — just the raw JSON array.`;
 
   try{
     const res = await fetch("https://qzmwvnzrtvnpjfppajzd.supabase.co/functions/v1/generate-scope", {
@@ -1032,14 +1330,38 @@ Return ONLY a JSON array of 4-5 short plain-English sentences explaining what's 
     });
     statusEl.textContent = '';
   } catch(err){
-    statusEl.textContent = "Couldn't analyze this estimate — try again.";
+    statusEl.textContent = LANG==='es' ? "No se pudo analizar este estimado — intenta de nuevo." : "Couldn't analyze this estimate — try again.";
   } finally {
     btn.disabled = false;
   }
 }
 
-// ---- PDF Report ----
-function downloadPDF(){
+// ---- PDF Report / Proposal ----
+const THEMES = {
+  modern:     { accent:[232,98,44],  font:'helvetica', mode:'fill' },
+  luxury:     { accent:[180,140,40], font:'times',     mode:'rule' },
+  blueprints: { accent:[58,110,168], font:'courier',   mode:'outline' },
+  minimal:    { accent:[20,20,20],   font:'helvetica', mode:'rule' },
+  industrial: { accent:[45,45,45],   font:'helvetica', mode:'fill', textAccent:[255,150,40] }
+};
+
+// ---- Share on mobile if supported, otherwise download ----
+async function savePDFOrShare(doc, fileName){
+  try{
+    const blob = doc.output('blob');
+    const file = new File([blob], fileName, { type: 'application/pdf' });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: fileName });
+      return;
+    }
+  } catch(e){ /* fall through to download */ }
+  doc.save(fileName);
+}
+
+async function downloadPDF(opts){
+  opts = opts || {};
+  const isProposal = !!opts.isProposal;
+  const theme = THEMES[opts.theme] || THEMES.modern;
   if(!currentEstimate){ return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
@@ -1047,8 +1369,9 @@ function downloadPDF(){
   const pageH = doc.internal.pageSize.getHeight();
   const marginX = 48;
   let y = 54;
+  const F = theme.font;
 
-  const companyName = document.getElementById('companyName').value.trim() || "Your Company";
+  const companyName = document.getElementById('companyName').value.trim() || (LANG==='es' ? "Tu Empresa" : "Your Company");
   const companyPhone = document.getElementById('companyPhone').value.trim();
   const companyEmail = document.getElementById('companyEmail').value.trim();
   const companyLicense = document.getElementById('companyLicense').value.trim();
@@ -1060,46 +1383,65 @@ function downloadPDF(){
   const checkBreak = (need) => {
     if(y + need > pageH - 60){ doc.addPage(); y = 54; }
   };
+  const drawDivider = (h) => {
+    if(theme.mode === 'fill'){
+      doc.setFillColor(...theme.accent);
+      doc.rect(marginX, y, pageW - marginX*2, h, 'F');
+    } else if(theme.mode === 'outline'){
+      doc.setDrawColor(...theme.accent); doc.setLineWidth(1.5);
+      doc.rect(marginX, y - h/2 + 2, pageW - marginX*2, h + 2);
+      doc.setLineWidth(1);
+    } else {
+      doc.setDrawColor(...theme.accent); doc.setLineWidth(1.5);
+      doc.line(marginX, y, pageW-marginX, y);
+      doc.line(marginX, y+h, pageW-marginX, y+h);
+      doc.setLineWidth(1);
+    }
+  };
 
   // Header: logo + company
   if(logoDataUrl){
     try{ doc.addImage(logoDataUrl, logoFormat, marginX, y - 18, 60, 60); }catch(e){}
   }
   const textX = logoDataUrl ? marginX + 72 : marginX;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+  doc.setFont(F, "bold"); doc.setFontSize(16);
   doc.text(companyName, textX, y);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  doc.setFont(F, "normal"); doc.setFontSize(9); doc.setTextColor(90,90,90);
   let contactLine = [companyPhone, companyEmail].filter(Boolean).join("  ·  ");
   if(contactLine){ y += 14; doc.text(contactLine, textX, y); }
   if(companyLicense){ y += 13; doc.text(companyLicense, textX, y); }
   doc.setTextColor(0,0,0);
   y += 30;
 
-  // Title bar
-  doc.setFillColor(232,98,44);
-  doc.rect(marginX, y, pageW - marginX*2, 4, 'F');
+  // Title divider
+  drawDivider(4);
   y += 24;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(20);
-  doc.text("Project Estimate", marginX, y);
+  doc.setFont(F, "bold"); doc.setFontSize(20);
+  doc.text(LANG==='es' ? (isProposal ? "Propuesta de Proyecto" : "Cotización de Proyecto") : (isProposal ? "Project Proposal" : "Project Estimate"), marginX, y);
   y += 16;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(90,90,90);
-  doc.text(`Prepared ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`, marginX, y);
+  doc.setFont(F, "normal"); doc.setFontSize(10); doc.setTextColor(90,90,90);
+  const dateLocale = LANG==='es' ? 'es-MX' : 'en-US';
+  const preparedWord = LANG==='es' ? 'Preparado el' : 'Prepared';
+  doc.text(`${preparedWord} ${new Date().toLocaleDateString(dateLocale,{month:'long',day:'numeric',year:'numeric'})}`, marginX, y);
   doc.setTextColor(0,0,0);
   y += 26;
 
   // Customer + project info (two columns)
   const colW = (pageW - marginX*2 - 20) / 2;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(10);
-  doc.text("PREPARED FOR", marginX, y);
-  doc.text("PROJECT", marginX + colW + 20, y);
+  doc.setFont(F, "bold"); doc.setFontSize(10);
+  doc.text(LANG==='es' ? "PREPARADO PARA" : "PREPARED FOR", marginX, y);
+  doc.text(LANG==='es' ? "PROYECTO" : "PROJECT", marginX + colW + 20, y);
   y += 14;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.setFont(F, "normal"); doc.setFontSize(10);
   const custLines = [customerName || "—", customerAddress, customerPhone, customerEmail].filter(Boolean);
+  const trProjLabel = LANG==='es' && PROJECT_LABEL_ES[currentEstimate.projectLabel] ? PROJECT_LABEL_ES[currentEstimate.projectLabel] : currentEstimate.projectLabel;
+  const trUnitLabel = LANG==='es' && UNIT_LABEL_ES[currentEstimate.unitLabel] ? UNIT_LABEL_ES[currentEstimate.unitLabel] : currentEstimate.unitLabel;
+  const trTierName = LANG==='es' ? { Economy:"Económico", Standard:"Estándar", Premium:"Premium" }[currentEstimate.tierName] : currentEstimate.tierName;
   const projLines = [
-    currentEstimate.projectLabel,
-    `${currentEstimate.qty} ${currentEstimate.unitLabel.replace(/\(.*\)/,'').trim()}`,
-    `Finish tier: ${currentEstimate.tierName}`,
-    `Zip: ${currentEstimate.zip || "—"}`
+    trProjLabel,
+    `${currentEstimate.qty} ${trUnitLabel.replace(/\(.*\)/,'').trim()}`,
+    `${LANG==='es' ? 'Nivel de acabado' : 'Finish tier'}: ${trTierName}`,
+    `${LANG==='es' ? 'Código postal' : 'Zip'}: ${currentEstimate.zip || "—"}`
   ];
   const rowsN = Math.max(custLines.length, projLines.length);
   for(let i=0;i<rowsN;i++){
@@ -1109,60 +1451,88 @@ function downloadPDF(){
   }
   y += 14;
 
+  // Proposal intro paragraph
+  if(isProposal && currentEstimate.proposalIntro){
+    checkBreak(50);
+    doc.setFont(F, "normal"); doc.setFontSize(10.5);
+    const introLines = doc.splitTextToSize(currentEstimate.proposalIntro, pageW - marginX*2);
+    doc.text(introLines, marginX, y);
+    y += introLines.length * 14 + 16;
+  }
+
   // Price breakdown table
   checkBreak(40);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-  doc.text("Price Breakdown", marginX, y);
+  doc.setFont(F, "bold"); doc.setFontSize(12);
+  doc.text(LANG==='es' ? "Desglose de Precio" : "Price Breakdown", marginX, y);
   y += 16;
   doc.setDrawColor(200,200,200);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.setFont(F, "normal"); doc.setFontSize(10);
   currentEstimate.breakdownRows.forEach(row=>{
     checkBreak(18);
-    doc.text(row.label, marginX, y);
+    doc.text(trBreakdown(row.label), marginX, y);
     doc.text(fmt(row.amount), pageW - marginX, y, { align: 'right' });
     y += 16;
     doc.line(marginX, y-6, pageW - marginX, y-6);
   });
   checkBreak(18);
-  doc.text("Permits & fees (est.)", marginX, y);
+  doc.text(LANG==='es' ? "Permisos y tarifas (est.)" : "Permits & fees (est.)", marginX, y);
   doc.text(`${fmt(currentEstimate.permitLow)} – ${fmt(currentEstimate.permitHigh)}`, pageW - marginX, y, { align: 'right' });
   y += 16;
   checkBreak(18);
-  doc.text("Contingency (12%)", marginX, y);
+  doc.text(LANG==='es' ? "Contingencia (12%)" : "Contingency (12%)", marginX, y);
   doc.text(`${fmt(currentEstimate.contLow)} – ${fmt(currentEstimate.contHigh)}`, pageW - marginX, y, { align: 'right' });
   y += 22;
 
   // Total
   checkBreak(40);
-  doc.setFillColor(232,98,44);
-  doc.rect(marginX, y, pageW - marginX*2, 32, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(13);
-  doc.text("TOTAL RANGE", marginX + 12, y + 21);
+  drawDivider(32);
+  const barTextColor = theme.mode === 'fill' ? (theme.textAccent || [255,255,255]) : theme.accent;
+  doc.setTextColor(...barTextColor);
+  doc.setFont(F, "bold"); doc.setFontSize(13);
+  doc.text(LANG==='es' ? "RANGO TOTAL" : "TOTAL RANGE", marginX + 12, y + 21);
   doc.text(`${fmt(currentEstimate.totalLow)} – ${fmt(currentEstimate.totalHigh)}`, pageW - marginX - 12, y + 21, { align: 'right' });
   doc.setTextColor(0,0,0);
   y += 50;
 
   // Timeline
   checkBreak(50);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-  doc.text("Estimated Timeline", marginX, y);
+  doc.setFont(F, "bold"); doc.setFontSize(12);
+  doc.text(LANG==='es' ? "Cronograma Estimado" : "Estimated Timeline", marginX, y);
   y += 16;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.setFont(F, "normal"); doc.setFontSize(10);
+  const wkWord = LANG==='es' ? 'sem' : 'wk';
+  const weeksWord = LANG==='es' ? 'semanas' : 'weeks';
   currentEstimate.timelineSteps.forEach(step=>{
-    doc.text(`${step.name}: ${step.text}`, marginX, y);
+    const stepText = (step.lo===0 && step.hi===0) ? "—" : (step.lo===step.hi ? `${step.lo} ${wkWord}` : `${step.lo}–${step.hi} ${wkWord}`);
+    doc.text(`${trTimelineName(step.name)}: ${stepText}`, marginX, y);
     y += 14;
   });
-  doc.text(`Total: ${currentEstimate.timelineTotalText}`, marginX, y);
+  doc.text(`${LANG==='es'?'Total':'Total'}: ${currentEstimate.timelineTotalMin}–${currentEstimate.timelineTotalMax} ${weeksWord}`, marginX, y);
   y += 26;
+
+  // Payment schedule (proposal only)
+  if(isProposal && currentEstimate.paymentSchedule){
+    checkBreak(50);
+    doc.setFont(F, "bold"); doc.setFontSize(12);
+    doc.text(LANG==='es' ? "Calendario de Pagos" : "Payment Schedule", marginX, y);
+    y += 16;
+    doc.setFont(F, "normal"); doc.setFontSize(10);
+    currentEstimate.paymentSchedule.forEach(m=>{
+      checkBreak(16);
+      doc.text(`${m.pct}%  ${trPayLabel(m.label)}`, marginX, y);
+      doc.text(fmt(m.amount), pageW - marginX, y, { align: 'right' });
+      y += 15;
+    });
+    y += 12;
+  }
 
   // Scope of work (if generated)
   if(currentEstimate.scope && currentEstimate.scope.length){
     checkBreak(40);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-    doc.text("Scope of Work", marginX, y);
+    doc.setFont(F, "bold"); doc.setFontSize(12);
+    doc.text(LANG==='es' ? "Alcance del Trabajo" : "Scope of Work", marginX, y);
     y += 16;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.setFont(F, "normal"); doc.setFontSize(10);
     currentEstimate.scope.forEach((task, i)=>{
       checkBreak(30);
       const lines = doc.splitTextToSize(`${i+1}. ${task}`, pageW - marginX*2);
@@ -1172,22 +1542,101 @@ function downloadPDF(){
     y += 14;
   }
 
+  // Warranty (proposal only)
+  if(isProposal && currentEstimate.proposalWarranty){
+    checkBreak(50);
+    doc.setFont(F, "bold"); doc.setFontSize(12);
+    doc.text(LANG==='es' ? "Garantía" : "Warranty", marginX, y);
+    y += 16;
+    doc.setFont(F, "normal"); doc.setFontSize(10);
+    const warrantyLines = doc.splitTextToSize(currentEstimate.proposalWarranty, pageW - marginX*2);
+    doc.text(warrantyLines, marginX, y);
+    y += warrantyLines.length * 13 + 20;
+  }
+
+  // Signature lines (proposal only)
+  if(isProposal){
+    checkBreak(70);
+    const sigW = (pageW - marginX*2 - 30) / 2;
+    doc.setDrawColor(0,0,0); doc.setLineWidth(1);
+    doc.line(marginX, y + 30, marginX + sigW, y + 30);
+    doc.line(marginX + sigW + 30, y + 30, marginX + sigW*2 + 30, y + 30);
+    doc.setFont(F, "normal"); doc.setFontSize(9);
+    doc.text(LANG==='es' ? "Firma del Cliente / Fecha" : "Customer Signature / Date", marginX, y + 42);
+    doc.text(LANG==='es' ? "Firma del Contratista / Fecha" : "Contractor Signature / Date", marginX + sigW + 30, y + 42);
+    y += 60;
+  }
+
   // Disclaimer footer
   checkBreak(50);
-  doc.setDrawColor(232,98,44);
+  doc.setDrawColor(...theme.accent);
   doc.setLineWidth(2);
   doc.line(marginX, y, marginX, y + 34);
   doc.setLineWidth(1);
-  doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  doc.setFont(F, "italic"); doc.setFontSize(9); doc.setTextColor(90,90,90);
   const disclaimer = doc.splitTextToSize(
-    "This is a ballpark estimate from typical national price ranges plus a regional cost index — not a binding bid. Actual pricing depends on scope, site condition, access, and local labor rates.",
+    LANG==='es'
+      ? (isProposal
+          ? "Esta propuesta es un cálculo de buena fe basado en el alcance descrito arriba. El precio final puede ajustarse por condiciones imprevistas descubiertas al iniciar el trabajo, y cualquier cambio se documentará en una orden de cambio firmada."
+          : "Este es un cálculo aproximado basado en rangos de precios nacionales típicos más un índice de costo regional — no es una oferta firme. El precio real depende del alcance, condición del sitio, acceso y tarifas laborales locales.")
+      : (isProposal
+          ? "This proposal is a good-faith estimate based on the scope described above. Final pricing may be adjusted for unforeseen conditions discovered once work begins, and any changes will be documented in a signed change order."
+          : "This is a ballpark estimate from typical national price ranges plus a regional cost index — not a binding bid. Actual pricing depends on scope, site condition, access, and local labor rates."),
     pageW - marginX*2 - 16
   );
   doc.text(disclaimer, marginX + 12, y + 12);
   doc.setTextColor(0,0,0);
 
   const fileName = (currentEstimate.jobName || currentEstimate.projectLabel).replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-  doc.save(`${fileName || 'estimate'}.pdf`);
+  await savePDFOrShare(doc, `${fileName || 'estimate'}${isProposal ? '-proposal' : '-estimate'}.pdf`);
+}
+
+// ---- AI Proposal Generator (intro + warranty via the same edge function proxy) ----
+async function generateProposal(){
+  if(!currentEstimate) return;
+  const btn = document.getElementById('proposalBtn');
+  const statusEl = document.getElementById('proposalStatus');
+  const theme = document.getElementById('proposalTheme').value;
+  btn.disabled = true;
+  statusEl.textContent = LANG==='es' ? 'Redactando propuesta…' : 'Drafting proposal…';
+
+  const tierName = currentEstimate.tierName;
+  const companyName = document.getElementById('companyName').value.trim() || (LANG==='es' ? "nuestra empresa" : "our company");
+  const customerName = document.getElementById('customerName').value.trim() || (LANG==='es' ? "el cliente" : "the customer");
+  const langLine3 = LANG==='es' ? "\nWrite both fields in Spanish (natural Mexican Spanish, warm and professional)." : "";
+  const prompt = `You are a contractor writing a project proposal. Company: ${companyName}. Customer: ${customerName}.
+Project: ${currentEstimate.projectLabel}, ${currentEstimate.qty} (${currentEstimate.unitLabel}), ${tierName} finish tier.
+Difficulty: ${currentEstimate.difficulty}. Total estimate: ${fmt(currentEstimate.totalLow)}–${fmt(currentEstimate.totalHigh)}.
+${langLine3}
+Return ONLY a JSON object with two fields:
+"intro": a warm, professional 2-3 sentence paragraph introducing this proposal to the customer, referencing their specific project.
+"warranty": a 1-2 sentence warranty statement appropriate for this type of work (materials and labor coverage, typical duration for this trade).
+No markdown, no preamble, no code fences — just the raw JSON object.`;
+
+  try{
+    const res = await fetch("https://qzmwvnzrtvnpjfppajzd.supabase.co/functions/v1/generate-scope", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    currentEstimate.proposalIntro = parsed.intro || null;
+    currentEstimate.proposalWarranty = parsed.warranty || null;
+    statusEl.textContent = LANG==='es' ? 'Generando PDF…' : 'Building PDF…';
+    await downloadPDF({ isProposal: true, theme });
+    statusEl.textContent = LANG==='es' ? 'Propuesta lista.' : 'Proposal ready.';
+  } catch(err){
+    statusEl.textContent = LANG==='es' ? "No se pudo generar la propuesta — intenta de nuevo." : "Couldn't generate the proposal — try again.";
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ---- Save / load jobs via Supabase ----
