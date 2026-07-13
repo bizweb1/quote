@@ -316,14 +316,6 @@
   .scope-list li::before{ content:"□"; color:var(--hivis); flex-shrink:0; font-size:13px; }
 
   /* Save job */
-  .save-row{ display:flex; gap:8px; margin-top:16px; align-items:center; }
-  .save-btn{
-    background:var(--good); color:#fff; border:none; border-radius:3px;
-    padding:10px 16px; font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:600;
-    cursor:pointer; flex-shrink:0;
-  }
-  .save-btn:hover{ background:#358a5e; }
-  .save-status{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b5d3f; }
 
   /* Saved jobs panel */
   .jobs-panel{ max-width:1100px; margin:0 auto 60px; padding:0 20px; }
@@ -341,6 +333,69 @@
     font-size:12px; color:var(--steel); background:rgba(232,98,44,.1);
     border:1px dashed var(--hivis); border-radius:3px; padding:10px 12px; margin-top:8px;
   }
+
+  /* Mode toggle */
+  .mode-toggle{
+    display:flex; gap:0; margin-bottom:18px;
+    border:1px solid rgba(110,198,224,.4); border-radius:3px; overflow:hidden;
+  }
+  .mode-opt{
+    flex:1; text-align:center; padding:10px 6px; cursor:pointer;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--steel);
+    background:transparent;
+  }
+  .mode-opt.active{ background:var(--line-cyan); color:var(--blueprint-deep); font-weight:700; }
+  .contractor-fields{ display:none; }
+  .contractor-fields.show{ display:block; }
+
+  /* Photo gallery */
+  .photo-gallery{ margin-top:18px; padding-top:16px; border-top:1px dashed rgba(110,198,224,.4); }
+  .photo-gallery-title{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--line-cyan); margin-bottom:8px;
+  }
+  .photo-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .photo-grid img{
+    width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:3px;
+    border:1px solid rgba(110,198,224,.4); background:rgba(244,241,232,.05);
+  }
+
+  /* Price drivers (AI) */
+  .drivers-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:transparent; color:var(--ink); border:1px solid var(--ink); border-radius:3px;
+    padding:8px 12px; font-family:'IBM Plex Sans', sans-serif; font-size:12px; font-weight:600;
+    cursor:pointer; margin-top:8px;
+  }
+  .drivers-btn:hover{ background:var(--ink); color:#fff; }
+  .drivers-btn:disabled{ opacity:.5; cursor:default; }
+  .drivers-status{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#8a7f66; margin-top:6px; min-height:14px; }
+  .drivers-list{ list-style:none; margin:8px 0 0; padding:0; }
+  .drivers-list li{
+    display:flex; gap:8px; align-items:flex-start; font-size:13px; color:#3a3227;
+    padding:5px 0; border-bottom:1px dotted #d9d2bc;
+  }
+  .drivers-list li::before{ content:"✔"; color:var(--good); flex-shrink:0; font-size:12px; font-weight:700; }
+
+  /* Bid tiers (contractor mode) */
+  .bid-tiers{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:8px; }
+  .bid-tier{ background:#EAE6D8; border:1px solid #C9C2A8; border-radius:4px; padding:10px 8px; text-align:center; }
+  .bid-tier.reco{ background:var(--ink); border-color:var(--ink); }
+  .bid-tier.reco .bt-name, .bid-tier.reco .bt-amt{ color:#fff; }
+  .bid-tier .bt-name{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#6b5d3f; margin-bottom:4px; }
+  .bid-tier .bt-amt{ font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:600; color:var(--ink); }
+
+  /* Bigger save button */
+  .save-row{ display:flex; gap:10px; margin-top:18px; align-items:center; }
+  .save-btn{
+    background:var(--good); color:#fff; border:none; border-radius:4px;
+    padding:14px 20px; font-family:'Big Shoulders Display', sans-serif; font-weight:700;
+    font-size:16px; letter-spacing:.03em; text-transform:uppercase;
+    cursor:pointer; flex-shrink:0; display:flex; align-items:center; gap:8px;
+    box-shadow:0 4px 10px rgba(63,158,109,.35);
+  }
+  .save-btn:hover{ background:#358a5e; }
+  .save-status{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--line-cyan); }
 </style>
 </head>
 <body>
@@ -355,6 +410,11 @@
 <main>
   <section class="panel">
     <div class="panel-title">Work Order <span>#001</span></div>
+
+    <div class="mode-toggle" id="modeToggle">
+      <div class="mode-opt active" data-mode="homeowner">Homeowner</div>
+      <div class="mode-opt" data-mode="contractor">Contractor</div>
+    </div>
 
     <label for="jobName">Job name</label>
     <input type="text" id="jobName" placeholder="e.g. Smith Kitchen">
@@ -396,6 +456,27 @@
         <div class="gauge-tag" id="diffTag">—</div>
       </div>
     </div>
+
+    <div class="contractor-fields" id="contractorFields">
+      <div class="section-tag" style="color:var(--line-cyan); border-color:rgba(110,198,224,.4);">Profit calculator</div>
+      <div class="row">
+        <div>
+          <label for="profitPct">Desired profit %</label>
+          <input type="number" id="profitPct" min="0" max="80" value="25">
+        </div>
+        <div>
+          <label for="equipCost">Equipment ($)</label>
+          <input type="number" id="equipCost" min="0" value="0">
+        </div>
+      </div>
+      <label for="travelCost">Travel / mobilization ($)</label>
+      <input type="number" id="travelCost" min="0" value="0">
+    </div>
+
+    <div class="photo-gallery">
+      <div class="photo-gallery-title">Recent <span id="photoGalleryLabel">Kitchens</span></div>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
   </section>
 
   <section class="panel" style="padding:0; border:none; background:none;">
@@ -435,6 +516,19 @@
         </div>
       </div>
 
+      <button class="drivers-btn" id="driversBtn" onclick="explainDrivers()">Why is this priced this way? (AI)</button>
+      <div class="drivers-status" id="driversStatus"></div>
+      <ul class="drivers-list" id="driversList"></ul>
+
+      <div id="bidTiersWrap" class="contractor-fields">
+        <div class="section-tag">Recommended bid</div>
+        <div class="bid-tiers">
+          <div class="bid-tier"><div class="bt-name">Minimum</div><div class="bt-amt" id="bidMin">$0</div></div>
+          <div class="bid-tier reco"><div class="bt-name">Recommended</div><div class="bt-amt" id="bidReco">$0</div></div>
+          <div class="bid-tier"><div class="bt-name">Premium</div><div class="bt-amt" id="bidPremium">$0</div></div>
+        </div>
+      </div>
+
       <div class="section-tag">Estimated timeline</div>
       <div class="timeline" id="timelineRow"></div>
       <div class="tl-total" id="timelineTotal"></div>
@@ -450,7 +544,7 @@
       <p class="callout">This is a ballpark from typical national price ranges plus a regional index — not a bid. Actual pricing depends on scope, condition, access, and local labor rates. Get 2–3 contractor quotes before committing.</p>
 
       <div class="save-row">
-        <button class="save-btn" id="saveBtn" onclick="saveJob()">Save this job</button>
+        <button class="save-btn" id="saveBtn" onclick="saveJob()">💾 Save Project</button>
         <span class="save-status" id="saveStatus"></span>
       </div>
       <div id="configNote"></div>
@@ -525,6 +619,38 @@ function regionLabel(zip){
 }
 function isValidZip(zip){ return /^\d{5}$/.test((zip||"").trim()); }
 
+// ---- Photo gallery keywords per project type (Unsplash Source, no API key) ----
+const PHOTO_KEYWORDS = {
+  kitchen:"modern,kitchen,renovation", bathroom:"bathroom,renovation,tile",
+  roofing:"roofing,roof,house", siding:"house,siding,exterior",
+  painting:"interior,painting,wall", flooring:"hardwood,flooring,floor",
+  plumbing:"plumbing,pipes,bathroom", fencing:"wood,fence,backyard",
+  decking:"deck,backyard,patio", general:"home,renovation,remodel",
+  newbuild:"new,construction,house", aduAttached:"granny,flat,addition",
+  aduDetached:"backyard,cottage,adu", demo:"demolition,construction,debris"
+};
+const PHOTO_LABELS = {
+  kitchen:"Kitchens", bathroom:"Bathrooms", roofing:"Roofs", siding:"Siding Jobs",
+  painting:"Paint Jobs", flooring:"Floors", plumbing:"Plumbing Jobs", fencing:"Fences",
+  decking:"Decks", general:"Remodels", newbuild:"New Builds", aduAttached:"Attached ADUs",
+  aduDetached:"Detached ADUs", demo:"Demo Jobs"
+};
+
+// ---- Homeowner / Contractor mode ----
+let contractorMode = false;
+document.querySelectorAll('.mode-opt').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('.mode-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    contractorMode = opt.dataset.mode === 'contractor';
+    document.querySelectorAll('.contractor-fields').forEach(el=>el.classList.toggle('show', contractorMode));
+    render();
+  });
+});
+['profitPct','equipCost','travelCost'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+});
+
 const sel = document.getElementById('projectType');
 Object.entries(PROJECTS).forEach(([key,p])=>{
   const opt = document.createElement('option');
@@ -594,6 +720,20 @@ function render(){
   document.getElementById('ledgerZip').textContent = zip || "—";
   document.getElementById('ledgerTier').textContent = tier===0.75 ? "ECONOMY" : tier===1.5 ? "PREMIUM" : "STANDARD";
 
+  // Photo gallery
+  document.getElementById('photoGalleryLabel').textContent = PHOTO_LABELS[key] || p.label;
+  const photoGrid = document.getElementById('photoGrid');
+  photoGrid.innerHTML = '';
+  const kw = PHOTO_KEYWORDS[key] || "construction,renovation";
+  for(let i=0;i<3;i++){
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = `${p.label} example`;
+    img.src = `https://source.unsplash.com/240x180/?${kw}&sig=${key}${i}`;
+    img.onerror = () => { img.style.display = 'none'; };
+    photoGrid.appendChild(img);
+  }
+
   const low = p.low * qty * tier * region;
   const high = p.high * qty * tier * region;
   const permitLow = low * 0.03, permitHigh = high * 0.05;
@@ -634,16 +774,39 @@ function render(){
   });
   document.getElementById('timelineTotal').textContent = `Total: ${totalMin}–${totalMax} weeks`;
 
+  // Contractor bid tiers
+  if(contractorMode){
+    const profitPct = parseFloat(document.getElementById('profitPct').value) || 0;
+    const equip = parseFloat(document.getElementById('equipCost').value) || 0;
+    const travel = parseFloat(document.getElementById('travelCost').value) || 0;
+    const baseCost = (totalLow + totalHigh) / 2 + equip + travel;
+    const marginTo = pct => baseCost / (1 - Math.min(pct, 90) / 100);
+    document.getElementById('bidMin').textContent = fmt(marginTo(Math.max(profitPct - 8, 0)));
+    document.getElementById('bidReco').textContent = fmt(marginTo(profitPct));
+    document.getElementById('bidPremium').textContent = fmt(marginTo(profitPct + 8));
+  }
+
   currentEstimate = {
     jobName: document.getElementById('jobName').value.trim(),
     projectKey: key, projectLabel: p.label, unitLabel: p.unitLabel,
-    qty, zip, tier, totalLow, totalHigh, notes: document.getElementById('notes').value.trim(), scope: null
+    qty, zip, tier, totalLow, totalHigh, notes: document.getElementById('notes').value.trim(), scope: null,
+    region, regionText: regionLabel(zip), difficulty: p.difficulty,
+    topDrivers: [...p.breakdown].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([label,w])=>`${label} (${Math.round(w*100)}%)`)
   };
   document.getElementById('scopeList').innerHTML = '';
   document.getElementById('scopeStatus').textContent = '';
+  document.getElementById('driversList').innerHTML = '';
+  document.getElementById('driversStatus').textContent = '';
 
   const statusEl = document.getElementById('calcStatus');
-  statusEl.innerHTML = '<span class="dot"></span>Calculating…';
+  const calcSteps = ["Calculating regional labor…", "Updating materials…", "Checking permits…", "Done ✓"];
+  let stepI = 0;
+  statusEl.innerHTML = `<span class="dot"></span>${calcSteps[0]}`;
+  const stepTimer = setInterval(()=>{
+    stepI++;
+    if(myToken !== renderToken || stepI >= calcSteps.length){ clearInterval(stepTimer); return; }
+    statusEl.innerHTML = stepI === calcSteps.length - 1 ? calcSteps[stepI] : `<span class="dot"></span>${calcSteps[stepI]}`;
+  }, 230);
 
   const listEl = document.getElementById('breakdownList');
   listEl.innerHTML = '<div class="section-tag">Price breakdown</div>';
@@ -658,7 +821,7 @@ function render(){
 
   setTimeout(()=>{
     if(myToken !== renderToken) return;
-    statusEl.textContent = '';
+    setTimeout(()=>{ if(myToken === renderToken) statusEl.textContent = ''; }, 300);
     rows.forEach((r, i)=>{
       setTimeout(()=>{
         if(myToken !== renderToken) return;
@@ -669,7 +832,7 @@ function render(){
     animateRange(document.getElementById('totalVal'), totalLow*0.4, totalLow, totalHigh*0.4, totalHigh, 700);
     animateNumber(document.getElementById('permitVal'), 0, permitLow, 600, v => `${fmt(v)} – ${fmt(permitHigh)}`);
     animateNumber(document.getElementById('contVal'), 0, contLow, 600, v => `${fmt(v)} – ${fmt(contHigh)}`);
-  }, 400);
+  }, 900);
 }
 
 ['projectType','qty','zip'].forEach(id=>{
@@ -724,6 +887,59 @@ Return ONLY a JSON array of 6-10 short task strings in the order work would happ
     statusEl.textContent = '';
   } catch(err){
     statusEl.textContent = "Couldn't generate a scope of work — try again.";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---- AI Price Drivers (reuses the same generate-scope proxy) ----
+async function explainDrivers(){
+  if(!currentEstimate) return;
+  const btn = document.getElementById('driversBtn');
+  const statusEl = document.getElementById('driversStatus');
+  const listEl = document.getElementById('driversList');
+  btn.disabled = true;
+  listEl.innerHTML = '';
+  statusEl.textContent = 'Analyzing…';
+
+  const tierName = currentEstimate.tier===0.75 ? "economy" : currentEstimate.tier===1.5 ? "premium" : "standard";
+  const prompt = `You are a contractor's estimator explaining a price to a homeowner. Here's the job:
+Project: ${currentEstimate.projectLabel}
+Size: ${currentEstimate.qty} (${currentEstimate.unitLabel})
+Finish tier: ${tierName}
+Difficulty: ${currentEstimate.difficulty}
+Regional cost factor: ${currentEstimate.regionText}
+Top cost drivers by category: ${currentEstimate.topDrivers.join(", ")}
+Total estimate: ${fmt(currentEstimate.totalLow)}–${fmt(currentEstimate.totalHigh)}
+
+Return ONLY a JSON array of 4-5 short plain-English sentences explaining what's driving this price, referencing the specific numbers above where relevant. No markdown, no preamble, no code fences — just the raw JSON array.`;
+
+  try{
+    const res = await fetch("https://qzmwvnzrtvnpjfppajzd.supabase.co/functions/v1/generate-scope", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    let reasons;
+    try{ reasons = JSON.parse(cleaned); }
+    catch{ reasons = cleaned.split("\n").map(l => l.replace(/^[-*\d.\s]+/, "").trim()).filter(Boolean); }
+
+    listEl.innerHTML = '';
+    reasons.forEach(reason => {
+      const li = document.createElement('li');
+      li.textContent = reason;
+      listEl.appendChild(li);
+    });
+    statusEl.textContent = '';
+  } catch(err){
+    statusEl.textContent = "Couldn't analyze this estimate — try again.";
   } finally {
     btn.disabled = false;
   }
