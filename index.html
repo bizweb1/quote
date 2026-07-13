@@ -700,7 +700,11 @@ Return ONLY a JSON array of 6-10 short task strings in the order work would happ
   try{
     const res = await fetch("https://qzmwvnzrtvnpjfppajzd.supabase.co/functions/v1/generate-scope", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "apikey": SUPABASE_ANON_KEY
+      },
       body: JSON.stringify({ prompt })
     });
     const data = await res.json();
